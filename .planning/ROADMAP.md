@@ -65,7 +65,7 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Foundation: schema validation, state files (strategy.md + core-principles.md), Strategy Updater agent, tests
+- [x] 03-01-PLAN.md — Foundation: schema validation, state files (strategy.md + core-principles.md), Strategy Updater agent, tests
 - [ ] 03-02-PLAN.md — Pipeline integration: extend trading-cycle.md with Step 7 (Strategy Update) and core-principles.md reading
 
 ### Phase 4: Scheduling and Safety Hardening

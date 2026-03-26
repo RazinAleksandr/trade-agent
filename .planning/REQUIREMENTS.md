@@ -44,7 +44,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **STRT-04**: Strategy has locked "Core Principles" section that cannot be overwritten by the agent
 - [x] **STRT-05**: Per-cycle markdown report written by Reviewer to reports/ directory with trades, reasoning, results, learnings
 - [x] **STRT-06**: Strategy evolution history preserved — each update creates dated snapshot via git versioning
-- [ ] **STRT-07**: Configurable scheduling via cron or APScheduler (hourly, daily, custom interval)
+- [x] **STRT-07**: Configurable scheduling via cron or APScheduler (hourly, daily, custom interval)
 
 ### Safety
 
@@ -120,7 +120,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | STRT-04 | Phase 3 | Complete |
 | STRT-05 | Phase 3 | Complete |
 | STRT-06 | Phase 3 | Complete |
-| STRT-07 | Phase 4 | Pending |
+| STRT-07 | Phase 4 | Complete |
 | SAFE-01 | Phase 1 | Pending |
 | SAFE-02 | Phase 1 | Pending |
 | SAFE-03 | Phase 4 | Pending |
