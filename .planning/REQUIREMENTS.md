@@ -1,0 +1,137 @@
+# Requirements: Polymarket Autonomous Trading Agent v2
+
+**Defined:** 2025-03-25
+**Core Value:** The agent must autonomously trade, analyze its own performance, and improve its strategy over time — no human intervention required between scheduled cycles.
+
+## v1 Requirements
+
+Requirements for initial release. Each maps to roadmap phases.
+
+### Instrument Layer
+
+- [ ] **INST-01**: Python CLI tool fetches active markets from Gamma API filtered by volume, liquidity, and price range
+- [ ] **INST-02**: Python CLI tool retrieves current orderbook prices for a given market from CLOB API
+- [ ] **INST-03**: Python CLI tool calculates edge (estimated probability - market price) for a given market
+- [ ] **INST-04**: Python CLI tool computes Kelly criterion position size given edge, probability, and bankroll
+- [ ] **INST-05**: Python CLI tool executes paper trades (records simulated fills with configurable spread)
+- [ ] **INST-06**: Python CLI tool executes live trades via py-clob-client (GTC limit orders, signature_type=0)
+- [ ] **INST-07**: Python CLI tool tracks open positions with unrealized/realized P&L
+- [ ] **INST-08**: Python CLI tool detects resolved markets and finalizes P&L automatically
+- [ ] **INST-09**: Python CLI tool handles negative-risk markets (separate exchange contract)
+- [ ] **INST-10**: SQLite persistence stores trades, positions, decisions, market snapshots, and strategy metrics
+- [ ] **INST-11**: All parameters configurable via .env file (edge threshold, Kelly fraction, max position, max exposure, loop interval)
+- [ ] **INST-12**: Graceful shutdown on SIGINT/SIGTERM — finishes current operation before exit
+- [ ] **INST-13**: Dual logging — human-readable console + structured JSON file
+
+### Agent Layer
+
+- [ ] **AGNT-01**: Main agent reads strategy.md at cycle start and orchestrates sub-agents via Claude Code Task tool
+- [ ] **AGNT-02**: Scanner sub-agent calls instrument tools to find and filter candidate markets, returns ranked list
+- [ ] **AGNT-03**: Analyst sub-agent deep-dives each candidate market using web search, estimates probability with confidence score
+- [ ] **AGNT-04**: Analyst sub-agent runs Bull/Bear debate — one persona argues for the trade, one against — to surface risks
+- [ ] **AGNT-05**: Risk Manager sub-agent evaluates portfolio context, checks exposure limits, sizes positions via Kelly with confidence weighting
+- [ ] **AGNT-06**: Risk Manager sub-agent detects correlated market exposure and adjusts sizing to avoid concentration risk
+- [ ] **AGNT-07**: Planner sub-agent reads strategy + Scanner/Analyst/Risk Manager outputs, creates concrete trade plan for the cycle
+- [ ] **AGNT-08**: Reviewer sub-agent analyzes cycle results — trades taken, reasoning, outcomes, what to improve
+- [ ] **AGNT-09**: Sub-agents return structured JSON output with defined schemas for reliable inter-agent data passing
+- [ ] **AGNT-10**: Each sub-agent has max_turns limit to prevent token cost runaway
+
+### Strategy & Reporting
+
+- [ ] **STRT-01**: Strategy starts as blank markdown document — no pre-seeded rules
+- [ ] **STRT-02**: Main agent updates strategy.md after each cycle based on Reviewer analysis
+- [ ] **STRT-03**: Strategy covers four domains: market selection rules, analysis approach, risk parameters, trade entry/exit rules
+- [ ] **STRT-04**: Strategy has locked "Core Principles" section that cannot be overwritten by the agent
+- [ ] **STRT-05**: Per-cycle markdown report written by Reviewer to reports/ directory with trades, reasoning, results, learnings
+- [ ] **STRT-06**: Strategy evolution history preserved — each update creates dated snapshot via git versioning
+- [ ] **STRT-07**: Configurable scheduling via cron or APScheduler (hourly, daily, custom interval)
+
+### Safety
+
+- [ ] **SAFE-01**: Paper trading is the default mode — live trading requires explicit .env configuration change
+- [ ] **SAFE-02**: Paper mode simulates realistic spreads (not perfect fills) to prevent false edge measurement
+- [ ] **SAFE-03**: Live trading gate — system requires positive paper P&L over configurable N cycles before allowing live mode
+- [ ] **SAFE-04**: CLOB API credential refresh on 401 responses (L2 credentials expire)
+- [ ] **SAFE-05**: Order amount normalization (max 2 decimal places for sell orders, minimum 5 USDC notional)
+
+## v2 Requirements
+
+Deferred to future release. Tracked but not in current roadmap.
+
+### Enhanced Analysis
+
+- **ANLZ-01**: Market timing-to-resolution scoring (prefer markets with resolution within analysis horizon)
+- **ANLZ-02**: Liquidity depth analysis before order placement
+- **ANLZ-03**: Enhanced market filtering heuristics based on accumulated trading data
+
+### Operations
+
+- **OPS-01**: Multi-exchange support (Kalshi, Metaculus)
+- **OPS-02**: Automated performance dashboards
+
+## Out of Scope
+
+Explicitly excluded. Documented to prevent scope creep.
+
+| Feature | Reason |
+|---------|--------|
+| Web UI / dashboard | CLI/file-based only. Markdown reports are the visibility layer. |
+| Real-time streaming / WebSocket feeds | Batch-cycle architecture. Snapshots at cycle start are sufficient. |
+| Backtesting engine | Paper trading IS the validation environment. Historical data is sparse. |
+| Human approval per trade | Eliminates autonomous value. Strategy doc + reports provide transparency. |
+| Reinforcement learning / model fine-tuning | Strategy document evolution replaces ML infrastructure. |
+| Copy trading / whale following | Conflicts with building analytical edge. |
+| Social media scraping | Analyst sub-agent's web search covers relevant signals. |
+| Per-trade stop-loss / take-profit | Binary markets resolve at resolution date. Conservative sizing is the risk control. |
+| Cross-exchange arbitrage | Extreme complexity for marginal gain. |
+
+## Traceability
+
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| INST-01 | — | Pending |
+| INST-02 | — | Pending |
+| INST-03 | — | Pending |
+| INST-04 | — | Pending |
+| INST-05 | — | Pending |
+| INST-06 | — | Pending |
+| INST-07 | — | Pending |
+| INST-08 | — | Pending |
+| INST-09 | — | Pending |
+| INST-10 | — | Pending |
+| INST-11 | — | Pending |
+| INST-12 | — | Pending |
+| INST-13 | — | Pending |
+| AGNT-01 | — | Pending |
+| AGNT-02 | — | Pending |
+| AGNT-03 | — | Pending |
+| AGNT-04 | — | Pending |
+| AGNT-05 | — | Pending |
+| AGNT-06 | — | Pending |
+| AGNT-07 | — | Pending |
+| AGNT-08 | — | Pending |
+| AGNT-09 | — | Pending |
+| AGNT-10 | — | Pending |
+| STRT-01 | — | Pending |
+| STRT-02 | — | Pending |
+| STRT-03 | — | Pending |
+| STRT-04 | — | Pending |
+| STRT-05 | — | Pending |
+| STRT-06 | — | Pending |
+| STRT-07 | — | Pending |
+| SAFE-01 | — | Pending |
+| SAFE-02 | — | Pending |
+| SAFE-03 | — | Pending |
+| SAFE-04 | — | Pending |
+| SAFE-05 | — | Pending |
+
+**Coverage:**
+- v1 requirements: 35 total
+- Mapped to phases: 0
+- Unmapped: 35
+
+---
+*Requirements defined: 2025-03-25*
+*Last updated: 2025-03-25 after initial definition*
