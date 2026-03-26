@@ -29,7 +29,15 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Running `python tools/get_portfolio.py` returns current open positions with unrealized P&L calculated from live prices
   4. Running any tool with invalid arguments prints a usage error to stderr and exits with non-zero code; SIGINT during execution completes the current operation cleanly before exit
   5. All tool output and errors are written to both console (human-readable) and a structured JSON log file; all parameters (edge threshold, Kelly fraction, max position, max exposure) are read from `.env`
-**Plans**: TBD
+**Plans:** 6 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Foundation: lib/ package (config, models, db, logging, signals, errors) + test infra
+- [ ] 01-02-PLAN.md — Market data and pricing: Gamma API client, CLOB API pricing, discover_markets + get_prices tools
+- [ ] 01-03-PLAN.md — Strategy math: Kelly criterion, edge calculation, calculate_edge + calculate_kelly tools
+- [ ] 01-04-PLAN.md — Trade execution: paper + live trading, execute_trade tool
+- [ ] 01-05-PLAN.md — Portfolio tracking: positions, P&L, resolved markets, get_portfolio + check_resolved tools
+- [ ] 01-06-PLAN.md — V1 cleanup: delete legacy files, .env.example, integration verification
 
 ### Phase 2: Agent Layer
 **Goal**: A main Claude Code agent can run a complete trading cycle — dispatching Scanner, Analyst, Risk Manager, Planner, and Reviewer sub-agents — that discovers markets, estimates probabilities, sizes positions, executes paper trades, and writes a cycle report
@@ -74,7 +82,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Instrument Layer | 0/TBD | Not started | - |
+| 1. Instrument Layer | 0/6 | Planning complete | - |
 | 2. Agent Layer | 0/TBD | Not started | - |
 | 3. Strategy Evolution | 0/TBD | Not started | - |
 | 4. Scheduling and Safety Hardening | 0/TBD | Not started | - |
