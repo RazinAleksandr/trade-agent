@@ -9,19 +9,19 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Instrument Layer
 
-- [ ] **INST-01**: Python CLI tool fetches active markets from Gamma API filtered by volume, liquidity, and price range
-- [ ] **INST-02**: Python CLI tool retrieves current orderbook prices for a given market from CLOB API
-- [ ] **INST-03**: Python CLI tool calculates edge (estimated probability - market price) for a given market
-- [ ] **INST-04**: Python CLI tool computes Kelly criterion position size given edge, probability, and bankroll
+- [x] **INST-01**: Python CLI tool fetches active markets from Gamma API filtered by volume, liquidity, and price range
+- [x] **INST-02**: Python CLI tool retrieves current orderbook prices for a given market from CLOB API
+- [x] **INST-03**: Python CLI tool calculates edge (estimated probability - market price) for a given market
+- [x] **INST-04**: Python CLI tool computes Kelly criterion position size given edge, probability, and bankroll
 - [ ] **INST-05**: Python CLI tool executes paper trades (records simulated fills with configurable spread)
 - [ ] **INST-06**: Python CLI tool executes live trades via py-clob-client (GTC limit orders, signature_type=0)
 - [ ] **INST-07**: Python CLI tool tracks open positions with unrealized/realized P&L
 - [ ] **INST-08**: Python CLI tool detects resolved markets and finalizes P&L automatically
-- [ ] **INST-09**: Python CLI tool handles negative-risk markets (separate exchange contract)
-- [ ] **INST-10**: SQLite persistence stores trades, positions, decisions, market snapshots, and strategy metrics
-- [ ] **INST-11**: All parameters configurable via .env file (edge threshold, Kelly fraction, max position, max exposure, loop interval)
-- [ ] **INST-12**: Graceful shutdown on SIGINT/SIGTERM — finishes current operation before exit
-- [ ] **INST-13**: Dual logging — human-readable console + structured JSON file
+- [x] **INST-09**: Python CLI tool handles negative-risk markets (separate exchange contract)
+- [x] **INST-10**: SQLite persistence stores trades, positions, decisions, market snapshots, and strategy metrics
+- [x] **INST-11**: All parameters configurable via .env file (edge threshold, Kelly fraction, max position, max exposure, loop interval)
+- [x] **INST-12**: Graceful shutdown on SIGINT/SIGTERM — finishes current operation before exit
+- [x] **INST-13**: Dual logging — human-readable console + structured JSON file
 
 ### Agent Layer
 
@@ -91,19 +91,19 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INST-01 | Phase 1 | Pending |
-| INST-02 | Phase 1 | Pending |
-| INST-03 | Phase 1 | Pending |
-| INST-04 | Phase 1 | Pending |
+| INST-01 | Phase 1 | Complete |
+| INST-02 | Phase 1 | Complete |
+| INST-03 | Phase 1 | Complete |
+| INST-04 | Phase 1 | Complete |
 | INST-05 | Phase 1 | Pending |
 | INST-06 | Phase 1 | Pending |
 | INST-07 | Phase 1 | Pending |
 | INST-08 | Phase 1 | Pending |
-| INST-09 | Phase 1 | Pending |
-| INST-10 | Phase 1 | Pending |
-| INST-11 | Phase 1 | Pending |
-| INST-12 | Phase 1 | Pending |
-| INST-13 | Phase 1 | Pending |
+| INST-09 | Phase 1 | Complete |
+| INST-10 | Phase 1 | Complete |
+| INST-11 | Phase 1 | Complete |
+| INST-12 | Phase 1 | Complete |
+| INST-13 | Phase 1 | Complete |
 | AGNT-01 | Phase 2 | Pending |
 | AGNT-02 | Phase 2 | Pending |
 | AGNT-03 | Phase 2 | Pending |
