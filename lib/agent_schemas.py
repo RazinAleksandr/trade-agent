@@ -180,3 +180,25 @@ def validate_reviewer_output(data: dict) -> tuple[bool, str]:
     return _check_required_keys(
         data["summary"], summary_required, "summary"
     )
+
+
+def validate_strategy_update(data: dict) -> tuple[bool, str]:
+    """Validate strategy update JSON structure.
+
+    Required fields: cycle_id (str), timestamp (str),
+    changes_applied (int), changes (list, each with domain, type, description),
+    deferred (list), summary (str), git_committed (bool).
+    """
+    top_required = [
+        "cycle_id", "timestamp", "changes_applied",
+        "changes", "deferred", "summary", "git_committed",
+    ]
+    valid, error = _check_required_keys(data, top_required, "strategy update")
+    if not valid:
+        return valid, error
+
+    if not isinstance(data["changes"], list):
+        return False, "Field 'changes' must be a list"
+
+    change_required = ["domain", "type", "description"]
+    return _check_list_items(data["changes"], change_required, "changes")

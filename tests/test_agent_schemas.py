@@ -11,6 +11,7 @@ from lib.agent_schemas import (
     validate_reviewer_output,
     validate_risk_output,
     validate_scanner_output,
+    validate_strategy_update,
     validate_trade_plan,
 )
 
@@ -226,3 +227,73 @@ def test_validate_reviewer_output_rejects_missing_markets_scanned():
     valid, error = validate_reviewer_output(data)
     assert not valid
     assert "markets_scanned" in error.lower()
+
+
+# --- Strategy Update Tests ---
+
+
+def _valid_strategy_update():
+    """Return a valid strategy update dict for testing."""
+    return {
+        "cycle_id": "20260326-143000",
+        "timestamp": "2026-03-26T14:50:00Z",
+        "reviewer_suggestions_count": 3,
+        "changes_applied": 2,
+        "changes_deferred": 1,
+        "changes": [
+            {
+                "domain": "market_selection",
+                "type": "new_rule",
+                "description": "Prioritize markets with 7-30 day expiry",
+                "source_suggestion": "Reviewer suggestion #1",
+            },
+            {
+                "domain": "risk_parameters",
+                "type": "refinement",
+                "description": "Lower sizing for markets with < 0.6 confidence",
+                "source_suggestion": "Reviewer suggestion #2",
+            },
+        ],
+        "deferred": [
+            {
+                "suggestion": "Increase MIN_EDGE_THRESHOLD to 0.12",
+                "reason": "Insufficient data after 1 cycle",
+            },
+        ],
+        "summary": "Added market expiry rule and refined sizing guidance.",
+        "git_committed": True,
+    }
+
+
+def test_validate_strategy_update_accepts_valid():
+    """Strategy update validation accepts valid output with changes and deferred."""
+    data = _valid_strategy_update()
+    valid, error = validate_strategy_update(data)
+    assert valid, f"Expected valid, got error: {error}"
+
+
+def test_validate_strategy_update_rejects_missing_changes():
+    """Strategy update validation rejects output missing the 'changes' field."""
+    data = _valid_strategy_update()
+    del data["changes"]
+    valid, error = validate_strategy_update(data)
+    assert not valid
+    assert "changes" in error.lower()
+
+
+def test_validate_strategy_update_rejects_change_missing_domain():
+    """Strategy update validation rejects a change item missing 'domain'."""
+    data = _valid_strategy_update()
+    del data["changes"][0]["domain"]
+    valid, error = validate_strategy_update(data)
+    assert not valid
+    assert "domain" in error.lower()
+
+
+def test_validate_strategy_update_accepts_empty_changes():
+    """Strategy update validation accepts output with empty changes list (no-op cycle)."""
+    data = _valid_strategy_update()
+    data["changes"] = []
+    data["changes_applied"] = 0
+    valid, error = validate_strategy_update(data)
+    assert valid, f"Expected valid, got error: {error}"
