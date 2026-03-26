@@ -34,9 +34,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md — Foundation: lib/ package (config, models, db, logging, signals, errors) + test infra
 - [x] 01-02-PLAN.md — Market data and pricing: Gamma API client, CLOB API pricing, discover_markets + get_prices tools
-- [ ] 01-03-PLAN.md — Strategy math: Kelly criterion, edge calculation, calculate_edge + calculate_kelly tools
+- [x] 01-03-PLAN.md — Strategy math: Kelly criterion, edge calculation, calculate_edge + calculate_kelly tools
 - [ ] 01-04-PLAN.md — Trade execution: paper + live trading, execute_trade tool
-- [ ] 01-05-PLAN.md — Portfolio tracking: positions, P&L, resolved markets, get_portfolio + check_resolved tools
+- [x] 01-05-PLAN.md — Portfolio tracking: positions, P&L, resolved markets, get_portfolio + check_resolved tools
 - [ ] 01-06-PLAN.md — V1 cleanup: delete legacy files, .env.example, integration verification
 
 ### Phase 2: Agent Layer

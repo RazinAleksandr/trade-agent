@@ -15,8 +15,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **INST-04**: Python CLI tool computes Kelly criterion position size given edge, probability, and bankroll
 - [ ] **INST-05**: Python CLI tool executes paper trades (records simulated fills with configurable spread)
 - [ ] **INST-06**: Python CLI tool executes live trades via py-clob-client (GTC limit orders, signature_type=0)
-- [ ] **INST-07**: Python CLI tool tracks open positions with unrealized/realized P&L
-- [ ] **INST-08**: Python CLI tool detects resolved markets and finalizes P&L automatically
+- [x] **INST-07**: Python CLI tool tracks open positions with unrealized/realized P&L
+- [x] **INST-08**: Python CLI tool detects resolved markets and finalizes P&L automatically
 - [x] **INST-09**: Python CLI tool handles negative-risk markets (separate exchange contract)
 - [x] **INST-10**: SQLite persistence stores trades, positions, decisions, market snapshots, and strategy metrics
 - [x] **INST-11**: All parameters configurable via .env file (edge threshold, Kelly fraction, max position, max exposure, loop interval)
@@ -97,8 +97,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INST-04 | Phase 1 | Complete |
 | INST-05 | Phase 1 | Pending |
 | INST-06 | Phase 1 | Pending |
-| INST-07 | Phase 1 | Pending |
-| INST-08 | Phase 1 | Pending |
+| INST-07 | Phase 1 | Complete |
+| INST-08 | Phase 1 | Complete |
 | INST-09 | Phase 1 | Complete |
 | INST-10 | Phase 1 | Complete |
 | INST-11 | Phase 1 | Complete |

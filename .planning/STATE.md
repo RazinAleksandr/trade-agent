@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to execute
-stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-03-26T10:42:23.084Z"
+stopped_at: Completed 01-05-PLAN.md
+last_updated: "2026-03-26T10:48:31.361Z"
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 6
-  completed_plans: 2
+  completed_plans: 4
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 ## Current Position
 
 Phase: 01 (instrument-layer) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 
 ## Performance Metrics
 
@@ -49,6 +49,7 @@ Plan: 4 of 6
 | Phase 01 P01 | 4min | 2 tasks | 11 files |
 | Phase 01 P03 | 3min | 2 tasks | 4 files |
 | Phase 01 P02 | 5min | 2 tasks | 8 files |
+| Phase 01 P05 | 2min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,8 @@ Recent decisions affecting current work:
 - [Phase 01]: get_fill_price inverts CLOB API side semantics: BUY queries SELL book for best ask, SELL queries BUY book for best bid
 - [Phase 01]: CLI tools use sys.path.insert for lib/ importability when run as standalone scripts
 - [Phase 01]: lib/market_data.py functions take explicit params (no global config import); CLI tools pass config values in
+- [Phase 01]: Stateless functions instead of PortfolioManager class for CLI tool compatibility
+- [Phase 01]: Unrealized P&L persisted to DB on each portfolio summary call for consistency
 
 ### Pending Todos
 
@@ -83,6 +86,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T10:42:23.082Z
-Stopped at: Completed 01-02-PLAN.md
+Last session: 2026-03-26T10:48:31.359Z
+Stopped at: Completed 01-05-PLAN.md
 Resume file: None
