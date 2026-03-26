@@ -32,8 +32,10 @@ logs/
 get-shit-done/
 taches-cc-resources/
 
-# Claude
-.claude/
+# Claude (settings, cache, worktrees, etc.)
+.claude/*
+# But allow agent definition files (sub-agent prompts are code)
+!.claude/agents/
 
 # Agent cycle intermediate data (ephemeral)
 state/cycles/*/
