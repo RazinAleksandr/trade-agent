@@ -19,9 +19,10 @@ The agent must autonomously trade, analyze its own performance, and improve its 
 - [x] Sub-agent: Risk Manager — evaluates portfolio risk and position sizing — *Validated in Phase 02: agent-layer*
 - [x] Sub-agent: Planner — reads strategy + sub-agent outputs, creates concrete trade plan — *Validated in Phase 02: agent-layer*
 - [x] Sub-agent: Trade Reviewer — post-trade analysis of successes and failures — *Validated in Phase 02: agent-layer*
+- [x] Strategy system: Markdown strategy doc that Claude builds from scratch and evolves after each cycle — *Validated in Phase 03: strategy-evolution*
+- [x] Sub-agent: Strategy Updater — reads Reviewer output, incrementally updates strategy.md, commits changes — *Validated in Phase 03: strategy-evolution*
 
 ### Active
-- [ ] Strategy system: Markdown strategy doc that Claude builds from scratch and evolves after each cycle
 - [ ] Strategy system: Configurable parameters (edge thresholds, Kelly fraction, filters) that agent can adjust
 - [ ] Reporting: Per-cycle markdown reports with trade analysis, reasoning, and results
 - [ ] Scheduling: Configurable job frequency (hourly, daily, etc.) triggering full trading cycles
@@ -98,7 +99,7 @@ Strategy starts blank. After each cycle, Claude analyzes what worked and what di
 | Two-layer architecture (instrument + agent) | Clean separation of execution tools from decision-making intelligence | ✓ Instrument layer shipped (Phase 01) |
 | Claude Code CLI as agent runtime | Native sub-agent spawning via Task tool, Bash for instrument calls | — Pending |
 | Multi-agent (5 sub-agents) | Specialization — each agent focuses on one concern like a team | — Pending |
-| Strategy from scratch | Avoid encoding human biases; let agent discover what works | — Pending |
+| Strategy from scratch | Avoid encoding human biases; let agent discover what works | ✓ 4-domain strategy.md + core-principles.md (Phase 03) |
 | Fresh codebase | Old architecture doesn't support agent layer; cherry-pick good code | ✓ V1 deleted, v2 lib/tools/ live (Phase 01) |
 | Per-cycle markdown reports | Human-readable audit trail; agent reads own history for learning | — Pending |
 
@@ -120,4 +121,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-26 after Phase 01 completion — instrument layer shipped, v1 removed*
+*Last updated: 2026-03-26 after Phase 03 completion — strategy evolution system shipped (strategy.md, core-principles.md, Strategy Updater agent, trading-cycle integration)*
