@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to plan
-stopped_at: Phase 2 context gathered
-last_updated: "2026-03-26T13:21:54.726Z"
+stopped_at: Completed 02-04-PLAN.md
+last_updated: "2026-03-26T15:12:38.928Z"
 progress:
   total_phases: 4
-  completed_phases: 1
-  total_plans: 6
-  completed_plans: 6
+  completed_phases: 2
+  total_plans: 10
+  completed_plans: 10
 ---
 
 # Project State
@@ -19,11 +19,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-26)
 
 **Core value:** The agent must autonomously trade, analyze its own performance, and improve its strategy over time — no human intervention required between scheduled cycles.
-**Current focus:** Phase 01 — instrument-layer
+**Current focus:** Phase 02 — agent-layer
 
 ## Current Position
 
-Phase: 2
+Phase: 3
 Plan: Not started
 
 ## Performance Metrics
@@ -52,6 +52,10 @@ Plan: Not started
 | Phase 01 P05 | 2min | 2 tasks | 4 files |
 | Phase 01 P04 | 3min | 2 tasks | 3 files |
 | Phase 01 P06 | 1min | 2 tasks | 12 files |
+| Phase 02 P01 | 5min | 2 tasks | 8 files |
+| Phase 02 P03 | 3min | 2 tasks | 4 files |
+| Phase 02 P02 | 3min | 2 tasks | 3 files |
+| Phase 02 P04 | 3min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -79,6 +83,14 @@ Recent decisions affecting current work:
 - [Phase 01]: Paper trades let ValueError propagate when CLOB unreachable (D-10: no fake fills)
 - [Phase 01]: validate_order checks price in (0,1) range and notional >= order_min_size USDC
 - [Phase 01]: Deleted all 9 v1 root .py files per D-06, preserved setup_wallet.py for Phase 4
+- [Phase 02]: Plain Python dict checks for schema validation instead of jsonschema library -- avoids adding a dependency
+- [Phase 02]: Cycle data (state/cycles/*/) excluded from git via .gitignore but .gitkeep preserved for directory tracking
+- [Phase 02]: Unignored .claude/agents/ in .gitignore to track agent definitions while keeping other .claude/ files private
+- [Phase 02]: Risk Manager uses correlation_factor 0.5 for correlated positions; Planner maxTurns: 8, Risk Manager/Reviewer maxTurns: 10
+- [Phase 02]: .gitignore changed from .claude/ to .claude/* with !.claude/agents/ so agent definitions are version-controlled
+- [Phase 02]: Sub-agent frontmatter pattern: name, description, tools, model: inherit, maxTurns, permissionMode: bypassPermissions
+- [Phase 02]: Main agent maxTurns set to 50 for full pipeline execution (5 sub-agent spawns + trade execution + validation)
+- [Phase 02]: validate_execution_results in test file (not lib/) since main agent validates inline in prompt logic
 
 ### Pending Todos
 
@@ -92,6 +104,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T13:21:54.723Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-agent-layer/02-CONTEXT.md
+Last session: 2026-03-26T15:07:10.796Z
+Stopped at: Completed 02-04-PLAN.md
+Resume file: None
