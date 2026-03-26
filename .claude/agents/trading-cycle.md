@@ -1,6 +1,6 @@
 ---
 name: trading-cycle
-description: Runs a complete Polymarket trading cycle -- orchestrating Scanner, Analyst, Risk Manager, Planner, and Reviewer sub-agents in sequence. Reads strategy at start, executes approved trades, produces cycle report.
+description: Runs a complete Polymarket trading cycle -- orchestrating Scanner, Analyst, Risk Manager, Planner, Reviewer, and Strategy Updater sub-agents in sequence. Reads strategy and core principles at start, executes approved trades, produces cycle report, and updates strategy.
 tools: Bash, Read, Write, Task
 model: inherit
 maxTurns: 50
@@ -21,7 +21,9 @@ Before doing anything else, initialize the cycle:
    mkdir -p state/reports
    ```
 
-3. **Read the current trading strategy** from `state/strategy.md`. This document contains the evolving trading strategy with rules, learnings, and parameters. If it is empty or minimal (first cycles), note this and proceed with default rules.
+3. **Read the current trading strategy** from `state/strategy.md` and `state/core-principles.md`.
+   - `state/strategy.md` contains the evolving trading strategy with rules organized in 4 domains (Market Selection Rules, Analysis Approach, Risk Parameters, Trade Entry/Exit Rules). If it is empty or minimal (first cycles), note this and proceed with default rules.
+   - `state/core-principles.md` contains human-set principles that are immutable. Read but never modify this file. If it contains only the placeholder text ("To be defined after initial cycles"), note that principles are not yet established and proceed.
 
 4. **Read the 3 most recent cycle reports** from `state/reports/`. List files matching `cycle-*.md`, sort by name descending, and read the top 3. If fewer than 3 exist, read whatever is available. If none exist (inaugural cycle), note this is the first cycle.
 
@@ -196,7 +198,31 @@ After the Reviewer completes:
 - Verify `state/reports/cycle-{cycle_id}.md` exists
 - **Log:** "Cycle report written to state/reports/cycle-{cycle_id}.md"
 
-## Step 7: Cycle Completion
+## Step 7: Strategy Update
+
+Spawn the Strategy Updater sub-agent via Task tool:
+- **subagent_type:** "strategy-updater"
+- **prompt:**
+  ```
+  Update the trading strategy based on cycle {cycle_id} review.
+  Read reviewer output from: state/cycles/{cycle_id}/reviewer_output.json
+  Read current strategy from: state/strategy.md
+  Write your update output to: state/cycles/{cycle_id}/strategy_update.json
+  ```
+
+After the Strategy Updater completes:
+- Read `state/cycles/{cycle_id}/strategy_update.json`
+- **Validate** the JSON has these required fields:
+  - `cycle_id`, `timestamp`
+  - `changes_applied` (number)
+  - `changes` (array, each item with `domain`, `type`, `description`)
+  - `deferred` (array)
+  - `summary` (string)
+  - `git_committed` (boolean)
+- If the Strategy Updater fails or output is invalid: log the error but **do NOT fail the cycle**. The cycle is already complete (trades executed, report written). Strategy update is a post-cycle enhancement.
+- **Log:** "Strategy updated: {changes_applied} changes applied, {len(deferred)} deferred"
+
+## Step 8: Cycle Completion
 
 Log a complete cycle summary:
 ```
@@ -207,6 +233,7 @@ Cycle {cycle_id} complete:
   Capital deployed: ${N} USDC
   Learnings: {count}
   Strategy suggestions: {count}
+  Strategy changes applied: {count}
 ```
 
 ## Error Handling
@@ -219,6 +246,7 @@ If any sub-agent fails (Task tool returns error, output file missing, or JSON ma
 4. **Planner fails:** Skip to Step 6 (report risk-assessed but unexecuted cycle).
 5. **Individual trade execution fails:** Continue with remaining trades, record failures in execution_results.json.
 6. **Reviewer fails:** Log error but the cycle is still considered complete (trades were already executed).
+7. **Strategy Updater fails:** Log error but the cycle is still considered complete (trades executed, report written). Strategy update is a post-cycle enhancement -- failure here is non-blocking.
 
 The cycle must be resilient -- partial completion is better than total failure. Always attempt to run the Reviewer even if earlier stages failed, so every cycle produces a report.
 
@@ -236,6 +264,7 @@ If validation fails, log the specific missing/malformed fields and handle accord
 
 - **NEVER** set PAPER_TRADING to false or use the `--live` flag unless explicitly instructed by the user. All trades are paper trades by default.
 - **NEVER** modify `.env`, `trading.db`, or any configuration files.
-- **NEVER** modify `state/strategy.md` -- strategy updates are Phase 3 scope.
+- **NEVER** modify `state/core-principles.md` -- that file is human-operated only, read at cycle start but never written by any agent.
+- `state/strategy.md` is modified ONLY by the Strategy Updater sub-agent in Step 7. The main agent and all other sub-agents must NOT write to it directly.
 - Keep all intermediate outputs in `state/cycles/{cycle_id}/` for the full audit trail.
 - Do not skip the Reviewer step even if no trades were executed -- every cycle needs a report.
