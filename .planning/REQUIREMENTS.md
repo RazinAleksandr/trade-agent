@@ -25,25 +25,25 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Agent Layer
 
-- [ ] **AGNT-01**: Main agent reads strategy.md at cycle start and orchestrates sub-agents via Claude Code Task tool
-- [ ] **AGNT-02**: Scanner sub-agent calls instrument tools to find and filter candidate markets, returns ranked list
-- [ ] **AGNT-03**: Analyst sub-agent deep-dives each candidate market using web search, estimates probability with confidence score
-- [ ] **AGNT-04**: Analyst sub-agent runs Bull/Bear debate — one persona argues for the trade, one against — to surface risks
-- [ ] **AGNT-05**: Risk Manager sub-agent evaluates portfolio context, checks exposure limits, sizes positions via Kelly with confidence weighting
-- [ ] **AGNT-06**: Risk Manager sub-agent detects correlated market exposure and adjusts sizing to avoid concentration risk
-- [ ] **AGNT-07**: Planner sub-agent reads strategy + Scanner/Analyst/Risk Manager outputs, creates concrete trade plan for the cycle
-- [ ] **AGNT-08**: Reviewer sub-agent analyzes cycle results — trades taken, reasoning, outcomes, what to improve
-- [ ] **AGNT-09**: Sub-agents return structured JSON output with defined schemas for reliable inter-agent data passing
-- [ ] **AGNT-10**: Each sub-agent has max_turns limit to prevent token cost runaway
+- [x] **AGNT-01**: Main agent reads strategy.md at cycle start and orchestrates sub-agents via Claude Code Task tool
+- [x] **AGNT-02**: Scanner sub-agent calls instrument tools to find and filter candidate markets, returns ranked list
+- [x] **AGNT-03**: Analyst sub-agent deep-dives each candidate market using web search, estimates probability with confidence score
+- [x] **AGNT-04**: Analyst sub-agent runs Bull/Bear debate — one persona argues for the trade, one against — to surface risks
+- [x] **AGNT-05**: Risk Manager sub-agent evaluates portfolio context, checks exposure limits, sizes positions via Kelly with confidence weighting
+- [x] **AGNT-06**: Risk Manager sub-agent detects correlated market exposure and adjusts sizing to avoid concentration risk
+- [x] **AGNT-07**: Planner sub-agent reads strategy + Scanner/Analyst/Risk Manager outputs, creates concrete trade plan for the cycle
+- [x] **AGNT-08**: Reviewer sub-agent analyzes cycle results — trades taken, reasoning, outcomes, what to improve
+- [x] **AGNT-09**: Sub-agents return structured JSON output with defined schemas for reliable inter-agent data passing
+- [x] **AGNT-10**: Each sub-agent has max_turns limit to prevent token cost runaway
 
 ### Strategy & Reporting
 
-- [ ] **STRT-01**: Strategy starts as blank markdown document — no pre-seeded rules
-- [ ] **STRT-02**: Main agent updates strategy.md after each cycle based on Reviewer analysis
-- [ ] **STRT-03**: Strategy covers four domains: market selection rules, analysis approach, risk parameters, trade entry/exit rules
-- [ ] **STRT-04**: Strategy has locked "Core Principles" section that cannot be overwritten by the agent
-- [ ] **STRT-05**: Per-cycle markdown report written by Reviewer to reports/ directory with trades, reasoning, results, learnings
-- [ ] **STRT-06**: Strategy evolution history preserved — each update creates dated snapshot via git versioning
+- [x] **STRT-01**: Strategy starts as blank markdown document — no pre-seeded rules
+- [x] **STRT-02**: Main agent updates strategy.md after each cycle based on Reviewer analysis
+- [x] **STRT-03**: Strategy covers four domains: market selection rules, analysis approach, risk parameters, trade entry/exit rules
+- [x] **STRT-04**: Strategy has locked "Core Principles" section that cannot be overwritten by the agent
+- [x] **STRT-05**: Per-cycle markdown report written by Reviewer to reports/ directory with trades, reasoning, results, learnings
+- [x] **STRT-06**: Strategy evolution history preserved — each update creates dated snapshot via git versioning
 - [ ] **STRT-07**: Configurable scheduling via cron or APScheduler (hourly, daily, custom interval)
 
 ### Safety
@@ -104,22 +104,22 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INST-11 | Phase 1 | Complete |
 | INST-12 | Phase 1 | Complete |
 | INST-13 | Phase 1 | Complete |
-| AGNT-01 | Phase 2 | Pending |
-| AGNT-02 | Phase 2 | Pending |
-| AGNT-03 | Phase 2 | Pending |
-| AGNT-04 | Phase 2 | Pending |
-| AGNT-05 | Phase 2 | Pending |
-| AGNT-06 | Phase 2 | Pending |
-| AGNT-07 | Phase 2 | Pending |
-| AGNT-08 | Phase 2 | Pending |
-| AGNT-09 | Phase 2 | Pending |
-| AGNT-10 | Phase 2 | Pending |
-| STRT-01 | Phase 3 | Pending |
-| STRT-02 | Phase 3 | Pending |
-| STRT-03 | Phase 3 | Pending |
-| STRT-04 | Phase 3 | Pending |
-| STRT-05 | Phase 3 | Pending |
-| STRT-06 | Phase 3 | Pending |
+| AGNT-01 | Phase 2 | Complete |
+| AGNT-02 | Phase 2 | Complete |
+| AGNT-03 | Phase 2 | Complete |
+| AGNT-04 | Phase 2 | Complete |
+| AGNT-05 | Phase 2 | Complete |
+| AGNT-06 | Phase 2 | Complete |
+| AGNT-07 | Phase 2 | Complete |
+| AGNT-08 | Phase 2 | Complete |
+| AGNT-09 | Phase 2 | Complete |
+| AGNT-10 | Phase 2 | Complete |
+| STRT-01 | Phase 3 | Complete |
+| STRT-02 | Phase 3 | Complete |
+| STRT-03 | Phase 3 | Complete |
+| STRT-04 | Phase 3 | Complete |
+| STRT-05 | Phase 3 | Complete |
+| STRT-06 | Phase 3 | Complete |
 | STRT-07 | Phase 4 | Pending |
 | SAFE-01 | Phase 1 | Pending |
 | SAFE-02 | Phase 1 | Pending |
