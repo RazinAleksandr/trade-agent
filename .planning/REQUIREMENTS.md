@@ -13,8 +13,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **INST-02**: Python CLI tool retrieves current orderbook prices for a given market from CLOB API
 - [x] **INST-03**: Python CLI tool calculates edge (estimated probability - market price) for a given market
 - [x] **INST-04**: Python CLI tool computes Kelly criterion position size given edge, probability, and bankroll
-- [ ] **INST-05**: Python CLI tool executes paper trades (records simulated fills with configurable spread)
-- [ ] **INST-06**: Python CLI tool executes live trades via py-clob-client (GTC limit orders, signature_type=0)
+- [x] **INST-05**: Python CLI tool executes paper trades (records simulated fills with configurable spread)
+- [x] **INST-06**: Python CLI tool executes live trades via py-clob-client (GTC limit orders, signature_type=0)
 - [x] **INST-07**: Python CLI tool tracks open positions with unrealized/realized P&L
 - [x] **INST-08**: Python CLI tool detects resolved markets and finalizes P&L automatically
 - [x] **INST-09**: Python CLI tool handles negative-risk markets (separate exchange contract)
@@ -95,8 +95,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INST-02 | Phase 1 | Complete |
 | INST-03 | Phase 1 | Complete |
 | INST-04 | Phase 1 | Complete |
-| INST-05 | Phase 1 | Pending |
-| INST-06 | Phase 1 | Pending |
+| INST-05 | Phase 1 | Complete |
+| INST-06 | Phase 1 | Complete |
 | INST-07 | Phase 1 | Complete |
 | INST-08 | Phase 1 | Complete |
 | INST-09 | Phase 1 | Complete |
