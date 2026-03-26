@@ -32,8 +32,9 @@ logs/
 get-shit-done/
 taches-cc-resources/
 
-# Claude
+# Claude (keep user config private, but track agent definitions)
 .claude/
+!.claude/agents/
 
 # Agent cycle intermediate data (ephemeral)
 state/cycles/*/
