@@ -13,14 +13,14 @@ The agent must autonomously trade, analyze its own performance, and improve its 
 ### Validated
 
 - [x] Instrument layer: Python tools for market discovery, price data, order execution, portfolio tracking — *Validated in Phase 01: instrument-layer*
+- [x] Agent layer: Claude Code main agent orchestrating sub-agents via Task tool — *Validated in Phase 02: agent-layer*
+- [x] Sub-agent: Market Scanner — finds and filters interesting markets from Gamma API — *Validated in Phase 02: agent-layer*
+- [x] Sub-agent: Market Analyst — deep-dives specific markets for probability estimation — *Validated in Phase 02: agent-layer*
+- [x] Sub-agent: Risk Manager — evaluates portfolio risk and position sizing — *Validated in Phase 02: agent-layer*
+- [x] Sub-agent: Planner — reads strategy + sub-agent outputs, creates concrete trade plan — *Validated in Phase 02: agent-layer*
+- [x] Sub-agent: Trade Reviewer — post-trade analysis of successes and failures — *Validated in Phase 02: agent-layer*
 
 ### Active
-- [ ] Agent layer: Claude Code main agent orchestrating sub-agents via Task tool
-- [ ] Sub-agent: Market Scanner — finds and filters interesting markets from Gamma API
-- [ ] Sub-agent: Market Analyst — deep-dives specific markets for probability estimation
-- [ ] Sub-agent: Risk Manager — evaluates portfolio risk and position sizing
-- [ ] Sub-agent: Planner — reads strategy + sub-agent outputs, creates concrete trade plan
-- [ ] Sub-agent: Trade Reviewer — post-trade analysis of successes and failures
 - [ ] Strategy system: Markdown strategy doc that Claude builds from scratch and evolves after each cycle
 - [ ] Strategy system: Configurable parameters (edge thresholds, Kelly fraction, filters) that agent can adjust
 - [ ] Reporting: Per-cycle markdown reports with trade analysis, reasoning, and results
