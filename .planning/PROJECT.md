@@ -12,11 +12,9 @@ The agent must autonomously trade, analyze its own performance, and improve its 
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Instrument layer: Python tools for market discovery, price data, order execution, portfolio tracking — *Validated in Phase 01: instrument-layer*
 
 ### Active
-
-- [ ] Instrument layer: Python tools for market discovery, price data, order execution, portfolio tracking
 - [ ] Agent layer: Claude Code main agent orchestrating sub-agents via Task tool
 - [ ] Sub-agent: Market Scanner — finds and filters interesting markets from Gamma API
 - [ ] Sub-agent: Market Analyst — deep-dives specific markets for probability estimation
@@ -27,8 +25,8 @@ The agent must autonomously trade, analyze its own performance, and improve its 
 - [ ] Strategy system: Configurable parameters (edge thresholds, Kelly fraction, filters) that agent can adjust
 - [ ] Reporting: Per-cycle markdown reports with trade analysis, reasoning, and results
 - [ ] Scheduling: Configurable job frequency (hourly, daily, etc.) triggering full trading cycles
-- [ ] Paper trading mode as default with path to live trading
-- [ ] Persistent state: Trade history, position tracking, strategy evolution history
+- [x] Paper trading mode as default with path to live trading — *Validated in Phase 01: instrument-layer*
+- [x] Persistent state: Trade history, position tracking, strategy evolution history — *Validated in Phase 01: instrument-layer*
 
 ### Out of Scope
 
@@ -97,11 +95,11 @@ Strategy starts blank. After each cycle, Claude analyzes what worked and what di
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Two-layer architecture (instrument + agent) | Clean separation of execution tools from decision-making intelligence | — Pending |
+| Two-layer architecture (instrument + agent) | Clean separation of execution tools from decision-making intelligence | ✓ Instrument layer shipped (Phase 01) |
 | Claude Code CLI as agent runtime | Native sub-agent spawning via Task tool, Bash for instrument calls | — Pending |
 | Multi-agent (5 sub-agents) | Specialization — each agent focuses on one concern like a team | — Pending |
 | Strategy from scratch | Avoid encoding human biases; let agent discover what works | — Pending |
-| Fresh codebase | Old architecture doesn't support agent layer; cherry-pick good code | — Pending |
+| Fresh codebase | Old architecture doesn't support agent layer; cherry-pick good code | ✓ V1 deleted, v2 lib/tools/ live (Phase 01) |
 | Per-cycle markdown reports | Human-readable audit trail; agent reads own history for learning | — Pending |
 
 ## Evolution
@@ -122,4 +120,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2025-03-25 after initialization*
+*Last updated: 2026-03-26 after Phase 01 completion — instrument layer shipped, v1 removed*
