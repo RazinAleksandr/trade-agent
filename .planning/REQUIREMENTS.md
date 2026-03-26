@@ -91,47 +91,47 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INST-01 | — | Pending |
-| INST-02 | — | Pending |
-| INST-03 | — | Pending |
-| INST-04 | — | Pending |
-| INST-05 | — | Pending |
-| INST-06 | — | Pending |
-| INST-07 | — | Pending |
-| INST-08 | — | Pending |
-| INST-09 | — | Pending |
-| INST-10 | — | Pending |
-| INST-11 | — | Pending |
-| INST-12 | — | Pending |
-| INST-13 | — | Pending |
-| AGNT-01 | — | Pending |
-| AGNT-02 | — | Pending |
-| AGNT-03 | — | Pending |
-| AGNT-04 | — | Pending |
-| AGNT-05 | — | Pending |
-| AGNT-06 | — | Pending |
-| AGNT-07 | — | Pending |
-| AGNT-08 | — | Pending |
-| AGNT-09 | — | Pending |
-| AGNT-10 | — | Pending |
-| STRT-01 | — | Pending |
-| STRT-02 | — | Pending |
-| STRT-03 | — | Pending |
-| STRT-04 | — | Pending |
-| STRT-05 | — | Pending |
-| STRT-06 | — | Pending |
-| STRT-07 | — | Pending |
-| SAFE-01 | — | Pending |
-| SAFE-02 | — | Pending |
-| SAFE-03 | — | Pending |
-| SAFE-04 | — | Pending |
-| SAFE-05 | — | Pending |
+| INST-01 | Phase 1 | Pending |
+| INST-02 | Phase 1 | Pending |
+| INST-03 | Phase 1 | Pending |
+| INST-04 | Phase 1 | Pending |
+| INST-05 | Phase 1 | Pending |
+| INST-06 | Phase 1 | Pending |
+| INST-07 | Phase 1 | Pending |
+| INST-08 | Phase 1 | Pending |
+| INST-09 | Phase 1 | Pending |
+| INST-10 | Phase 1 | Pending |
+| INST-11 | Phase 1 | Pending |
+| INST-12 | Phase 1 | Pending |
+| INST-13 | Phase 1 | Pending |
+| AGNT-01 | Phase 2 | Pending |
+| AGNT-02 | Phase 2 | Pending |
+| AGNT-03 | Phase 2 | Pending |
+| AGNT-04 | Phase 2 | Pending |
+| AGNT-05 | Phase 2 | Pending |
+| AGNT-06 | Phase 2 | Pending |
+| AGNT-07 | Phase 2 | Pending |
+| AGNT-08 | Phase 2 | Pending |
+| AGNT-09 | Phase 2 | Pending |
+| AGNT-10 | Phase 2 | Pending |
+| STRT-01 | Phase 3 | Pending |
+| STRT-02 | Phase 3 | Pending |
+| STRT-03 | Phase 3 | Pending |
+| STRT-04 | Phase 3 | Pending |
+| STRT-05 | Phase 3 | Pending |
+| STRT-06 | Phase 3 | Pending |
+| STRT-07 | Phase 4 | Pending |
+| SAFE-01 | Phase 1 | Pending |
+| SAFE-02 | Phase 1 | Pending |
+| SAFE-03 | Phase 4 | Pending |
+| SAFE-04 | Phase 4 | Pending |
+| SAFE-05 | Phase 1 | Pending |
 
 **Coverage:**
 - v1 requirements: 35 total
-- Mapped to phases: 0
-- Unmapped: 35
+- Mapped to phases: 35
+- Unmapped: 0
 
 ---
 *Requirements defined: 2025-03-25*
-*Last updated: 2025-03-25 after initial definition*
+*Last updated: 2026-03-26 after roadmap creation — all 35 requirements mapped*
