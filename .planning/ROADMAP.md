@@ -71,7 +71,7 @@ Plans:
 ### Phase 4: Scheduling and Safety Hardening
 **Goal**: The system runs unattended on a configurable schedule, refreshes expired CLOB credentials automatically, and requires explicit multi-step confirmation before any live trade is placed
 **Depends on**: Phase 3
-**Requirements**: SAFE-01, SAFE-02, SAFE-03, SAFE-04, SAFE-05
+**Requirements**: SAFE-01, SAFE-02, SAFE-03, SAFE-04, SAFE-05, STRT-07
 **Success Criteria** (what must be TRUE):
   1. A cron entry or APScheduler daemon triggers full trading cycles at a configurable interval; the cycle log shows the scheduled start time and completion time for each run
   2. When the CLOB API returns a 401 response during a cycle, the system re-derives L2 credentials and retries the request without failing the cycle

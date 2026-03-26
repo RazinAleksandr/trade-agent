@@ -2,7 +2,7 @@
 phase: 4
 slug: scheduling-and-safety-hardening
 status: draft
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-03-27
 ---
@@ -27,7 +27,7 @@ created: 2026-03-27
 
 ## Sampling Rate
 
-- **After every task commit:** Run `pytest tests/test_safety.py tests/test_scheduling.py -x -q`
+- **After every task commit:** Run task-specific verify command from PLAN.md
 - **After every plan wave:** Run `pytest tests/ -v`
 - **Before `/gsd:verify-work`:** Full suite must be green
 - **Max feedback latency:** 15 seconds
@@ -36,27 +36,24 @@ created: 2026-03-27
 
 ## Per-Task Verification Map
 
-| Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
-|---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 04-01-01 | 01 | 1 | SAFE-01 | unit | `pytest tests/test_safety.py::test_paper_trading_default -x` | Wave 0 | ⬜ pending |
-| 04-01-02 | 01 | 1 | SAFE-02 | unit | `pytest tests/test_safety.py::test_paper_fill_realistic_pricing -x` | Wave 0 | ⬜ pending |
-| 04-01-03 | 01 | 1 | SAFE-05 | unit | `pytest tests/test_safety.py::test_order_normalization -x` | Wave 0 | ⬜ pending |
-| 04-02-01 | 02 | 1 | SAFE-04 | unit | `pytest tests/test_safety.py::test_credential_refresh_on_401 -x` | Wave 0 | ⬜ pending |
-| 04-02-02 | 02 | 1 | SAFE-04 | unit | `pytest tests/test_safety.py::test_non_401_errors_propagate -x` | Wave 0 | ⬜ pending |
-| 04-03-01 | 03 | 2 | SAFE-03 | unit | `pytest tests/test_safety.py::test_gate_blocks_insufficient_cycles -x` | Wave 0 | ⬜ pending |
-| 04-03-02 | 03 | 2 | SAFE-03 | unit | `pytest tests/test_safety.py::test_gate_allows_on_conditions_met -x` | Wave 0 | ⬜ pending |
-| 04-03-03 | 03 | 2 | SAFE-03 | unit | `pytest tests/test_safety.py::test_execute_trade_blocks_without_gate -x` | Wave 0 | ⬜ pending |
-| 04-04-01 | 04 | 3 | STRT-07 | unit | `pytest tests/test_scheduling.py::test_interval_to_cron -x` | Wave 0 | ⬜ pending |
-| 04-04-02 | 04 | 3 | STRT-07 | unit | `pytest tests/test_scheduling.py::test_crontab_management -x` | Wave 0 | ⬜ pending |
+| Task ID | Plan | Wave | Requirement | Test Type | Automated Command | Status |
+|---------|------|------|-------------|-----------|-------------------|--------|
+| 04-01-01 | 01 | 1 | SAFE-03, SAFE-04 | unit | `python -c "from lib.config import Config; c = Config(); assert c.cycle_interval == '4h'" && grep -q '.live-gate-pass' .gitignore` | ⬜ pending |
+| 04-01-02 | 01 | 1 | SAFE-03, SAFE-04 | unit | `grep -q 'PolyApiException' lib/trading.py && grep -q 'GATE_BLOCKED' tools/execute_trade.py && pytest tests/test_trading.py -x -q` | ⬜ pending |
+| 04-02-01 | 02 | 1 | STRT-07 | integration | `test -x run_cycle.sh && grep -q 'polymarket-cycle.pid' run_cycle.sh && grep -q '.cron-env' run_cycle.sh` | ⬜ pending |
+| 04-02-02 | 02 | 1 | STRT-07 | unit | `pytest tests/test_scheduling.py -x -q` | ⬜ pending |
+| 04-03-01 | 03 | 2 | SAFE-03 | integration | `python tools/enable_live.py --help 2>&1 && grep -q 'CONFIRM LIVE' tools/enable_live.py` | ⬜ pending |
+| 04-03-02 | 03 | 2 | SAFE-01 to SAFE-05 | unit | `pytest tests/test_safety.py -x -v` | ⬜ pending |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+*Status: ⬜ pending / ✅ green / ❌ red / ⚠️ flaky*
 
 ---
 
 ## Wave 0 Requirements
 
-- [ ] `tests/test_safety.py` — stubs for SAFE-01, SAFE-02, SAFE-03, SAFE-04, SAFE-05
-- [ ] `tests/test_scheduling.py` — stubs for STRT-07 (interval parsing, crontab management)
+- No Wave 0 stub files needed. Each plan creates its own test files:
+  - Plan 04-02 Task 2 creates `tests/test_scheduling.py` (TDD -- tests written first)
+  - Plan 04-03 Task 2 creates `tests/test_safety.py` (TDD -- tests written first)
 - No framework install needed (pytest 9.0.2 already available)
 - Existing `tests/conftest.py` fixtures are reusable
 
@@ -74,11 +71,11 @@ created: 2026-03-27
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 15s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify commands
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] No Wave 0 stub files needed (TDD tasks create their own test files)
+- [x] No watch-mode flags
+- [x] Feedback latency < 15s
+- [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
