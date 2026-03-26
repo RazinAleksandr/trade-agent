@@ -34,3 +34,7 @@ taches-cc-resources/
 
 # Claude
 .claude/
+
+# Agent cycle intermediate data (ephemeral)
+state/cycles/*/
+!state/cycles/.gitkeep
