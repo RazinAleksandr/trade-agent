@@ -62,7 +62,11 @@ Plans:
   3. The "Core Principles" section of `state/strategy.md` remains unchanged across cycles regardless of what the agent writes elsewhere in the document
   4. Per-cycle markdown reports in `state/reports/` include: markets considered, trades taken, probability estimates, edge calculations, cycle P&L, and the agent's stated learnings
   5. Running the main agent at cycle start reads the current `state/strategy.md` and the last 3 cycle reports, and the Planner sub-agent references specific strategy rules in its trade plan output
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Foundation: schema validation, state files (strategy.md + core-principles.md), Strategy Updater agent, tests
+- [ ] 03-02-PLAN.md — Pipeline integration: extend trading-cycle.md with Step 7 (Strategy Update) and core-principles.md reading
 
 ### Phase 4: Scheduling and Safety Hardening
 **Goal**: The system runs unattended on a configurable schedule, refreshes expired CLOB credentials automatically, and requires explicit multi-step confirmation before any live trade is placed
@@ -84,5 +88,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Instrument Layer | 0/6 | Planning complete | - |
 | 2. Agent Layer | 0/TBD | Not started | - |
-| 3. Strategy Evolution | 0/TBD | Not started | - |
+| 3. Strategy Evolution | 0/2 | Planning complete | - |
 | 4. Scheduling and Safety Hardening | 0/TBD | Not started | - |
