@@ -77,7 +77,12 @@ Plans:
   2. When the CLOB API returns a 401 response during a cycle, the system re-derives L2 credentials and retries the request without failing the cycle
   3. Attempting to enable live trading with `PAPER_TRADING=false` in `.env` produces a confirmation prompt that displays current paper P&L, requires typing "CONFIRM LIVE" to proceed, and blocks live trading if paper P&L across the configured minimum cycle count is negative
   4. Paper mode order fills are priced at ask (buys) and bid (sells) from the live orderbook — not at mid-price — and order sizes are normalized to max 2 decimal places with minimum 5 USDC notional before any order is recorded or placed
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Safety core: Config extensions, 401 credential refresh, gate-pass check, DataStore cycle stats
+- [ ] 04-02-PLAN.md — Scheduling: cron wrapper script with PID lockfile, crontab setup tool
+- [ ] 04-03-PLAN.md — Live trading gate tool and safety verification tests (SAFE-01 through SAFE-05)
 
 ## Progress
 
@@ -89,4 +94,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Instrument Layer | 0/6 | Planning complete | - |
 | 2. Agent Layer | 0/TBD | Not started | - |
 | 3. Strategy Evolution | 0/2 | Planning complete | - |
-| 4. Scheduling and Safety Hardening | 0/TBD | Not started | - |
+| 4. Scheduling and Safety Hardening | 0/3 | Planning complete | - |
