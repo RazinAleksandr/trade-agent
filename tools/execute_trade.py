@@ -113,6 +113,19 @@ def main():
         is_live = args.live or not config.paper_trading
 
         if is_live:
+            # Gate-pass check (D-08: SAFE-03)
+            gate_path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                ".live-gate-pass"
+            )
+            if not os.path.exists(gate_path):
+                error_exit(
+                    "Live trading blocked: no gate pass. "
+                    "Run 'python tools/enable_live.py' to verify paper P&L and enable live trading.",
+                    "GATE_BLOCKED",
+                    EXIT_CONFIG_ERROR,
+                )
+
             # Live trading requires private key (D-11)
             if not config.private_key:
                 error_exit(

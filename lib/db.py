@@ -242,6 +242,34 @@ class DataStore:
             "avg_edge": avg_edge,
         }
 
+    def get_paper_cycle_stats(self, reports_dir: str = "state/reports") -> dict:
+        """Get paper trading statistics for live gate verification.
+
+        Counts completed cycle reports (not trade rows) per Pitfall 6.
+
+        Args:
+            reports_dir: Path to cycle reports directory.
+
+        Returns:
+            dict with cycle_count (int) and total_pnl (float).
+        """
+        import glob as _glob
+        import os as _os
+
+        # Count completed cycle report files (each represents one full cycle)
+        if _os.path.isdir(reports_dir):
+            cycle_count = len(_glob.glob(_os.path.join(reports_dir, "cycle-*.md")))
+        else:
+            cycle_count = 0
+
+        # Aggregate realized P&L from closed positions
+        result = self.conn.execute(
+            "SELECT COALESCE(SUM(realized_pnl), 0) FROM positions WHERE status = 'closed'"
+        ).fetchone()
+        total_pnl = float(result[0])
+
+        return {"cycle_count": cycle_count, "total_pnl": total_pnl}
+
     def close_position(self, market_id: str, exit_price: float):
         """Close a position and calculate realized PnL."""
         now = datetime.now(timezone.utc).isoformat()
