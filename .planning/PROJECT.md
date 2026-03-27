@@ -25,9 +25,10 @@ The agent must autonomously trade, analyze its own performance, and improve its 
 ### Active
 - [ ] Strategy system: Configurable parameters (edge thresholds, Kelly fraction, filters) that agent can adjust
 - [ ] Reporting: Per-cycle markdown reports with trade analysis, reasoning, and results
-- [ ] Scheduling: Configurable job frequency (hourly, daily, etc.) triggering full trading cycles
+- [x] Scheduling: Configurable job frequency (hourly, daily, etc.) triggering full trading cycles — *Validated in Phase 04: scheduling-and-safety-hardening*
 - [x] Paper trading mode as default with path to live trading — *Validated in Phase 01: instrument-layer*
 - [x] Persistent state: Trade history, position tracking, strategy evolution history — *Validated in Phase 01: instrument-layer*
+- [x] Safety gates: Live trading gate with paper P&L verification, 401 credential refresh, order normalization — *Validated in Phase 04: scheduling-and-safety-hardening*
 
 ### Out of Scope
 
@@ -121,4 +122,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-26 after Phase 03 completion — strategy evolution system shipped (strategy.md, core-principles.md, Strategy Updater agent, trading-cycle integration)*
+*Last updated: 2026-03-27 after Phase 04 completion — scheduling and safety hardening shipped (cron scheduling, live trading gate, 401 credential retry, comprehensive safety tests)*
