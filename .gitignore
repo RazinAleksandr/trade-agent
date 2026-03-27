@@ -19,6 +19,7 @@ build/
 # Data
 *.db
 *.sqlite
+.live-gate-pass
 
 # OS
 .DS_Store

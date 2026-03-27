@@ -23,6 +23,8 @@ class Config:
     gamma_api_url: str = "https://gamma-api.polymarket.com"
     chain_id: int = 137
     private_key: str = ""
+    cycle_interval: str = "4h"
+    min_paper_cycles: int = 10
 
 
 # Mapping from env var names to Config field names
@@ -42,6 +44,8 @@ _ENV_MAP = {
     "GAMMA_API_URL": "gamma_api_url",
     "CHAIN_ID": "chain_id",
     "PRIVATE_KEY": "private_key",
+    "CYCLE_INTERVAL": "cycle_interval",
+    "MIN_PAPER_CYCLES": "min_paper_cycles",
 }
 
 
