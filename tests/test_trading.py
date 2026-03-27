@@ -59,10 +59,12 @@ def test_validate_order_size_rounded():
 # --- execute_paper_trade tests ---
 
 
+@patch("lib.trading.get_fee_rate_from_api")
 @patch("lib.trading.get_fill_price")
-def test_paper_fill_pricing(mock_fill_price):
+def test_paper_fill_pricing(mock_fill_price, mock_api_fee):
     """Paper trade uses fill price from CLOB API (best ask for buys)."""
     mock_fill_price.return_value = 0.65
+    mock_api_fee.return_value = None
     store = MagicMock()
 
     result = execute_paper_trade(
@@ -83,12 +85,15 @@ def test_paper_fill_pricing(mock_fill_price):
     trade_call = store.record_trade.call_args
     assert trade_call.kwargs["price"] == 0.65
     assert trade_call.kwargs["fill_price"] == 0.65
+    assert trade_call.kwargs["fee_amount"] >= 0
 
 
+@patch("lib.trading.get_fee_rate_from_api")
 @patch("lib.trading.get_fill_price")
-def test_paper_trade_records_to_db(mock_fill_price):
+def test_paper_trade_records_to_db(mock_fill_price, mock_api_fee):
     """Paper trade records to database (record_trade and upsert_position)."""
     mock_fill_price.return_value = 0.55
+    mock_api_fee.return_value = None
     store = MagicMock()
 
     execute_paper_trade(
@@ -123,10 +128,12 @@ def test_paper_trade_fails_on_no_liquidity(mock_fill_price):
         )
 
 
+@patch("lib.trading.get_fee_rate_from_api")
 @patch("lib.trading.get_fill_price")
-def test_paper_trade_order_id_format(mock_fill_price):
+def test_paper_trade_order_id_format(mock_fill_price, mock_api_fee):
     """Paper trade order ID matches format: paper-{12 hex chars}."""
     mock_fill_price.return_value = 0.50
+    mock_api_fee.return_value = None
     store = MagicMock()
 
     result = execute_paper_trade(
@@ -143,10 +150,12 @@ def test_paper_trade_order_id_format(mock_fill_price):
     assert re.match(r"^paper-[0-9a-f]{12}$", result.order_id)
 
 
+@patch("lib.trading.get_fee_rate_from_api")
 @patch("lib.trading.get_fill_price")
-def test_paper_trade_uses_fill_price_for_position(mock_fill_price):
-    """upsert_position is called with the fill price, not some other price."""
+def test_paper_trade_uses_effective_price_for_position(mock_fill_price, mock_api_fee):
+    """upsert_position is called with fee-adjusted effective price (> fill price)."""
     mock_fill_price.return_value = 0.65
+    mock_api_fee.return_value = None
     store = MagicMock()
 
     execute_paper_trade(
@@ -157,16 +166,24 @@ def test_paper_trade_uses_fill_price_for_position(mock_fill_price):
         size=20.0,
         host="https://clob.polymarket.com",
         store=store,
+        category="other",
     )
 
     pos_call = store.upsert_position.call_args
-    assert pos_call.kwargs["price"] == 0.65
+    # Effective price should be higher than fill price due to entry fee
+    assert pos_call.kwargs["price"] > 0.65
+
+    # Trade record should still use actual fill price
+    trade_call = store.record_trade.call_args
+    assert trade_call.kwargs["price"] == 0.65
 
 
+@patch("lib.trading.get_fee_rate_from_api")
 @patch("lib.trading.get_fill_price")
-def test_paper_trade_below_minimum(mock_fill_price):
+def test_paper_trade_below_minimum(mock_fill_price, mock_api_fee):
     """Paper trade with notional below minimum returns failed OrderResult."""
     mock_fill_price.return_value = 0.10
+    mock_api_fee.return_value = None
     store = MagicMock()
 
     result = execute_paper_trade(

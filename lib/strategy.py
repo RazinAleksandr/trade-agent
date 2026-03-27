@@ -29,8 +29,9 @@ def kelly_criterion(prob: float, odds_price: float, fraction: float = 0.25) -> f
     return kelly * fraction
 
 
-def calculate_edge(estimated_prob: float, market_price: float) -> float:
-    """Calculate edge as estimated probability minus market price.
+def calculate_edge(estimated_prob: float, market_price: float,
+                   fee_adjustment: float = 0.0) -> float:
+    """Calculate edge as estimated probability minus market price minus fees.
 
     Positive edge = underpriced (buy opportunity).
     Negative edge = overpriced.
@@ -38,11 +39,12 @@ def calculate_edge(estimated_prob: float, market_price: float) -> float:
     Args:
         estimated_prob: Estimated true probability (0.0-1.0).
         market_price: Current market price (0.0-1.0).
+        fee_adjustment: Round-trip fee cost to subtract from edge (default 0.0).
 
     Returns:
         Edge value rounded to 6 decimal places.
     """
-    return round(estimated_prob - market_price, 6)
+    return round(estimated_prob - market_price - fee_adjustment, 6)
 
 
 def calculate_position_size(

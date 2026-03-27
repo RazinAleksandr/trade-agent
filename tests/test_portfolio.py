@@ -76,15 +76,24 @@ class TestGetPortfolioSummary:
 
     @patch("lib.portfolio.fetch_market_by_id")
     def test_portfolio_unrealized_pnl_calculation(self, mock_fetch, store):
-        """Unrealized P&L = (current_price - avg_price) * size."""
+        """Unrealized P&L = (current_price - exit_fee - avg_price) * size.
+
+        Exit fee is estimated conservatively (assumes CLOB exit).
+        Category 'test' falls back to 'other' (fee_rate=0.2, exponent=2).
+        At p=0.70: fee_per_share = 0.70 * 0.2 * (0.70 * 0.30)^2 = 0.0062
+        """
+        from lib.fees import calculate_fee_per_share
+
         _upsert_position(store, market_id="mkt1", side="YES", price=0.50, size=10.0)
 
         mock_fetch.return_value = _make_market(yes_price=0.70, no_price=0.30)
 
         result = get_portfolio_summary(store, "https://gamma-api.polymarket.com")
         pos = result["positions"][0]
-        # (0.70 - 0.50) * 10.0 = 2.0
-        assert abs(pos["unrealized_pnl"] - 2.0) < 0.001
+        # P&L includes exit fee deduction for conservative estimate
+        exit_fee = calculate_fee_per_share(0.70, "test")  # falls back to "other"
+        expected_pnl = (0.70 - exit_fee - 0.50) * 10.0
+        assert abs(pos["unrealized_pnl"] - expected_pnl) < 0.001
 
 
 class TestCheckResolvedMarkets:

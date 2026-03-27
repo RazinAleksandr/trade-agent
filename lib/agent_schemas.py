@@ -202,3 +202,51 @@ def validate_strategy_update(data: dict) -> tuple[bool, str]:
 
     change_required = ["domain", "type", "description"]
     return _check_list_items(data["changes"], change_required, "changes")
+
+
+def validate_position_monitor_output(data: dict) -> tuple[bool, str]:
+    """Validate position monitor output JSON structure.
+
+    Required fields: cycle_id (str), timestamp (str), positions_reviewed (int),
+    recommendations (list). Each recommendation must have: market_id, action,
+    sell_size, reasoning, urgency.
+    """
+    top_required = ["cycle_id", "timestamp", "positions_reviewed", "recommendations"]
+    valid, error = _check_required_keys(data, top_required, "position monitor output")
+    if not valid:
+        return valid, error
+
+    if not isinstance(data["recommendations"], list):
+        return False, "Field 'recommendations' must be a list"
+
+    rec_required = ["market_id", "action", "sell_size", "reasoning", "urgency"]
+    return _check_list_items(
+        data["recommendations"], rec_required, "recommendations"
+    )
+
+
+def validate_outcome_analysis(data: dict) -> tuple[bool, str]:
+    """Validate outcome analyzer output JSON structure.
+
+    Required fields: cycle_id (str), timestamp (str),
+    positions_analyzed (int), analyses (list),
+    calibration (dict), summary (str).
+    Each analysis must have: market_id, estimated_prob, actual_outcome,
+    brier_score, realized_pnl.
+    """
+    top_required = [
+        "cycle_id", "timestamp", "positions_analyzed",
+        "analyses", "calibration", "summary",
+    ]
+    valid, error = _check_required_keys(data, top_required, "outcome analysis")
+    if not valid:
+        return valid, error
+
+    if not isinstance(data["analyses"], list):
+        return False, "Field 'analyses' must be a list"
+
+    analysis_required = [
+        "market_id", "estimated_prob", "actual_outcome",
+        "brier_score", "realized_pnl",
+    ]
+    return _check_list_items(data["analyses"], analysis_required, "analyses")

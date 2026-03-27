@@ -10,10 +10,11 @@ import uuid
 from py_clob_client.client import ClobClient
 from py_clob_client.clob_types import OrderArgs, OrderType
 from py_clob_client.exceptions import PolyApiException
-from py_clob_client.order_builder.constants import BUY
+from py_clob_client.order_builder.constants import BUY, SELL
 
 from lib.models import OrderResult
 from lib.db import DataStore
+from lib.fees import calculate_fee, calculate_fee_per_share, get_fee_rate_from_api
 from lib.pricing import get_fill_price
 from lib.logging_setup import get_logger
 
@@ -61,11 +62,14 @@ def execute_paper_trade(
     reasoning: str = "",
     neg_risk: bool = False,
     order_min_size: float = 5.0,
+    category: str = "other",
 ) -> OrderResult:
-    """Execute a paper trade with realistic CLOB API pricing.
+    """Execute a paper trade with realistic CLOB API pricing and fee modeling.
 
     Paper buys fill at best ask from CLOB API (D-09). If CLOB API is
     unreachable, the trade fails with ValueError (D-10: no fake fills).
+    Fees are modeled via effective price adjustment: position cost basis
+    reflects fill_price + fee_per_share for accurate P&L tracking.
 
     Args:
         market_id: Polymarket market ID.
@@ -81,6 +85,7 @@ def execute_paper_trade(
         reasoning: Trade reasoning (for record-keeping).
         neg_risk: Whether market uses neg-risk exchange.
         order_min_size: Minimum order notional in USDC.
+        category: Market category for fee calculation (default: "other").
 
     Returns:
         OrderResult with paper trade details.
@@ -100,10 +105,22 @@ def execute_paper_trade(
     if not valid:
         return OrderResult(order_id="", success=False, message=msg, is_paper=True)
 
+    # Calculate fee: API-first lookup, fall back to category table
+    api_rate = get_fee_rate_from_api(token_id, host)
+    if api_rate is not None:
+        fee_per_share = round(api_rate * fill_price, 4)
+        fee_amount = round(api_rate * fill_price * size, 4)
+    else:
+        fee_per_share = calculate_fee_per_share(fill_price, category)
+        fee_amount = calculate_fee(size, fill_price, category)
+
+    # Fee-adjusted effective price: costlier entry
+    effective_price = fill_price + fee_per_share
+
     # Generate paper order ID
     order_id = f"paper-{uuid.uuid4().hex[:12]}"
 
-    # Record trade to database
+    # Record trade with actual fill price; fee tracked separately
     store.record_trade(
         market_id=market_id,
         question=question,
@@ -119,20 +136,22 @@ def execute_paper_trade(
         reasoning=reasoning,
         neg_risk=neg_risk,
         fill_price=fill_price,
+        fee_amount=fee_amount,
     )
 
-    # Update position
+    # Position uses fee-adjusted effective price for accurate P&L
     store.upsert_position(
         market_id=market_id,
         question=question,
         side=side,
-        price=fill_price,
+        price=effective_price,
         size=size,
         token_id=token_id,
     )
 
     log.info(
         f"[PAPER] {side} {size:.2f} shares @ ${fill_price:.3f} "
+        f"(eff ${effective_price:.4f}, fee ${fee_amount:.4f}) "
         f"on '{question[:50]}'"
     )
 
@@ -288,6 +307,214 @@ def execute_live_trade(
             )
 
     # Should not reach here, but safety return
+    return OrderResult(
+        order_id="", success=False,
+        message="Max retries exceeded", is_paper=False,
+    )
+
+
+def execute_paper_sell(
+    market_id: str,
+    question: str,
+    side: str,
+    token_id: str,
+    size: float,
+    host: str,
+    store: DataStore,
+    reasoning: str = "",
+    order_min_size: float = 5.0,
+    category: str = "other",
+) -> OrderResult:
+    """Execute a paper sell with realistic CLOB API pricing and fee modeling.
+
+    Sells fill at best bid from CLOB API. If CLOB API is unreachable,
+    the trade fails with ValueError (no fake fills). Fees are collected
+    in USDC on sells: effective_price = fill_price - fee_per_share.
+
+    Args:
+        market_id: Polymarket market ID.
+        question: Market question text (for record-keeping).
+        side: "YES" or "NO" -- which outcome to sell.
+        token_id: CLOB token ID for the outcome.
+        size: Number of shares to sell.
+        host: CLOB API host URL.
+        store: DataStore instance for persistence.
+        reasoning: Sell reasoning (for record-keeping).
+        order_min_size: Minimum order notional in USDC.
+        category: Market category for fee calculation (default: "other").
+
+    Returns:
+        OrderResult with paper sell details.
+
+    Raises:
+        ValueError: If CLOB API is unreachable or has no liquidity.
+    """
+    # Seller fills at best bid (highest buy order on book)
+    fill_price = get_fill_price(token_id, "SELL", host)
+
+    size = round(size, 2)
+
+    valid, msg = validate_order(fill_price, size, order_min_size)
+    if not valid:
+        return OrderResult(order_id="", success=False, message=msg, is_paper=True)
+
+    # Calculate fee: API-first lookup, fall back to category table
+    api_rate = get_fee_rate_from_api(token_id, host)
+    if api_rate is not None:
+        fee_per_share = round(api_rate * fill_price, 4)
+        fee_amount = round(api_rate * fill_price * size, 4)
+    else:
+        fee_per_share = calculate_fee_per_share(fill_price, category)
+        fee_amount = calculate_fee(size, fill_price, category)
+
+    # Fee-adjusted effective price: lower proceeds on sell
+    effective_price = fill_price - fee_per_share
+
+    order_id = f"paper-sell-{uuid.uuid4().hex[:12]}"
+
+    # Reduce/close position using fee-adjusted effective price
+    realized_pnl = store.reduce_position(market_id, size, effective_price)
+
+    # Record sell trade with actual fill price; fee tracked separately
+    store.record_trade(
+        market_id=market_id,
+        question=question,
+        side=side,
+        price=fill_price,
+        size=size,
+        token_id=token_id,
+        order_id=order_id,
+        is_paper=True,
+        reasoning=reasoning,
+        fill_price=fill_price,
+        action="SELL",
+        fee_amount=fee_amount,
+    )
+
+    log.info(
+        f"[PAPER SELL] {side} {size:.2f} shares @ ${fill_price:.3f} "
+        f"(eff ${effective_price:.4f}, fee ${fee_amount:.4f}) "
+        f"on '{question[:50]}' PnL=${realized_pnl:.2f}"
+    )
+
+    return OrderResult(
+        order_id=order_id,
+        success=True,
+        message=f"Paper sell executed, realized PnL: ${realized_pnl:.2f}",
+        is_paper=True,
+    )
+
+
+def execute_live_sell(
+    market_id: str,
+    question: str,
+    side: str,
+    token_id: str,
+    price: float,
+    size: float,
+    host: str,
+    private_key: str,
+    chain_id: int,
+    store: DataStore,
+    reasoning: str = "",
+    order_min_size: float = 5.0,
+) -> OrderResult:
+    """Execute a live sell via py-clob-client with signed GTC limit order.
+
+    Args:
+        market_id: Polymarket market ID.
+        question: Market question text (for record-keeping).
+        side: "YES" or "NO" -- which outcome to sell.
+        token_id: CLOB token ID for the outcome.
+        price: Limit price for the sell order.
+        size: Number of shares to sell.
+        host: CLOB API host URL.
+        private_key: Ethereum private key for signing.
+        chain_id: Chain ID (137 for Polygon).
+        store: DataStore instance for persistence.
+        reasoning: Sell reasoning (for record-keeping).
+        order_min_size: Minimum order notional in USDC.
+
+    Returns:
+        OrderResult with live sell details.
+    """
+    size = round(size, 2)
+
+    valid, msg = validate_order(price, size, order_min_size)
+    if not valid:
+        return OrderResult(order_id="", success=False, message=msg, is_paper=False)
+
+    max_retries = 1
+    for attempt in range(max_retries + 1):
+        try:
+            client = ClobClient(
+                host,
+                key=private_key,
+                chain_id=chain_id,
+                signature_type=0,
+            )
+            creds = client.create_or_derive_api_creds()
+            client.set_api_creds(creds)
+
+            order_args = OrderArgs(
+                token_id=token_id,
+                price=price,
+                size=size,
+                side=SELL,
+            )
+
+            signed = client.create_order(order_args)
+            result = client.post_order(signed, OrderType.GTC)
+
+            order_id = result.get("orderID", result.get("id", "unknown"))
+
+            # Reduce/close position and get realized PnL
+            realized_pnl = store.reduce_position(market_id, size, price)
+
+            # Record sell trade
+            store.record_trade(
+                market_id=market_id,
+                question=question,
+                side=side,
+                price=price,
+                size=size,
+                token_id=token_id,
+                order_id=order_id,
+                is_paper=False,
+                reasoning=reasoning,
+                fill_price=price,
+                action="SELL",
+            )
+
+            log.info(
+                f"[LIVE SELL] {side} {size:.2f} shares @ ${price:.3f} "
+                f"on '{question[:50]}' PnL=${realized_pnl:.2f} -- order: {order_id}"
+            )
+
+            return OrderResult(
+                order_id=order_id,
+                success=True,
+                message=f"Live sell executed, realized PnL: ${realized_pnl:.2f}",
+                is_paper=False,
+            )
+
+        except PolyApiException as e:
+            if e.status_code == 401 and attempt < max_retries:
+                log.warning(
+                    f"CLOB API returned 401, re-deriving credentials "
+                    f"(attempt {attempt + 1}/{max_retries})"
+                )
+                continue
+            log.error(f"Live sell failed: {e}")
+            return OrderResult(
+                order_id="", success=False, message=str(e), is_paper=False,
+            )
+        except Exception as e:
+            log.error(f"Live sell failed: {e}")
+            return OrderResult(
+                order_id="", success=False, message=str(e), is_paper=False,
+            )
+
     return OrderResult(
         order_id="", success=False,
         message="Max retries exceeded", is_paper=False,

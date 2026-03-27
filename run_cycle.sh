@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Resolve project root from script location
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# Run a single trading cycle inside a tmux session.
+# Cron calls this script. If a cycle is already running, it skips.
+# The tmux session stays alive after completion so you can attach and inspect.
 
-# Constants
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 LOCKFILE="/tmp/polymarket-cycle.pid"
 LOGDIR="$SCRIPT_DIR/logs"
 LOGFILE="$LOGDIR/cron-$(date +%Y%m%d-%H%M%S).log"
+SESSION_NAME="trading-$(date +%H%M%S)"
 
-# Ensure log directory exists
 mkdir -p "$LOGDIR"
 
-# PID-based lock check (macOS compatible; stale lock handling)
+# Skip if a previous cycle is still running
 if [ -f "$LOCKFILE" ]; then
     OLD_PID=$(cat "$LOCKFILE")
     if kill -0 "$OLD_PID" 2>/dev/null; then
@@ -24,33 +25,37 @@ if [ -f "$LOCKFILE" ]; then
     fi
 fi
 
-# Write PID and set cleanup trap
+# Write our PID
 echo $$ > "$LOCKFILE"
 trap 'rm -f "$LOCKFILE"' EXIT
 
-# Load PATH exported by setup_schedule.py at install time
-ENVFILE="$SCRIPT_DIR/.cron-env"
-if [ -f "$ENVFILE" ]; then
-    source "$ENVFILE"
+# Ensure PATH includes claude and common tools
+if [ -f "$SCRIPT_DIR/.cron-env" ]; then
+    source "$SCRIPT_DIR/.cron-env"
 else
-    # Fallback: add common tool locations
-    export PATH="/usr/local/bin:/opt/homebrew/bin:$PATH"
+    export PATH="/usr/local/bin:/opt/homebrew/bin:$HOME/.npm-global/bin:$HOME/.claude/local/bin:$PATH"
 fi
 
-# Activate Python virtualenv
-source "$SCRIPT_DIR/.venv/bin/activate"
+echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) START: Trading cycle in tmux session '$SESSION_NAME'" >> "$LOGFILE"
 
-# Change to project directory
-cd "$SCRIPT_DIR"
+# Launch claude in a new tmux session with permissions bypassed.
+# The session runs claude non-interactively with -p (print mode).
+# After claude exits, the shell stays open so you can: tmux attach -t <session>
+tmux new-session -d -s "$SESSION_NAME" \
+    "cd $SCRIPT_DIR && source .venv/bin/activate && \
+     claude -p 'run a trading cycle' --dangerously-skip-permissions \
+     2>&1 | tee -a $LOGFILE; \
+     echo ''; echo '=== Cycle finished at $(date) ==='; \
+     echo 'Session: $SESSION_NAME — attach with: tmux attach -t $SESSION_NAME'; \
+     exec bash"
 
-# Run trading cycle via Claude CLI
-echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) START: Trading cycle" >> "$LOGFILE"
-claude --agent .claude/agents/trading-cycle.md \
-    --print \
-    --output-format text \
-    --verbose \
-    "Run a trading cycle" \
-    >> "$LOGFILE" 2>&1
-EXIT_CODE=$?
-echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) END: Trading cycle (exit=$EXIT_CODE)" >> "$LOGFILE"
-exit $EXIT_CODE
+# Wait for claude process to finish (poll tmux session)
+while tmux has-session -t "$SESSION_NAME" 2>/dev/null; do
+    # Check if claude is still running inside the session
+    if ! tmux list-panes -t "$SESSION_NAME" -F '#{pane_current_command}' 2>/dev/null | grep -q claude; then
+        break
+    fi
+    sleep 30
+done
+
+echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) END: Trading cycle" >> "$LOGFILE"

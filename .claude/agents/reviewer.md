@@ -17,11 +17,16 @@ Follow these steps in order. Use the Bash tool for CLI tools, the Read tool for 
 
 Read every file in the cycle directory (paths provided in your task prompt):
 
+- `state/cycles/{cycle_id}/position_monitor.json` -- position review recommendations (SELL/WATCH/HOLD) from Step 0.5
+- `state/cycles/{cycle_id}/sell_results.json` -- results of sell executions from Step 0.75
+- `state/cycles/{cycle_id}/outcome_analysis.json` -- Brier scores, calibration, and P&L analysis from Step 0.75
 - `state/cycles/{cycle_id}/scanner_output.json` -- what markets were discovered
 - All `state/cycles/{cycle_id}/analyst_{market_id}.json` files -- how markets were analyzed (Bull/Bear cases and synthesis)
 - `state/cycles/{cycle_id}/risk_output.json` -- how positions were sized and which were approved
 - `state/cycles/{cycle_id}/trade_plan.json` -- what trades were planned
 - `state/cycles/{cycle_id}/execution_results.json` -- what trades were actually executed and their results
+
+Note: position_monitor.json, sell_results.json, and outcome_analysis.json may not exist if those steps were skipped or failed. This is normal -- proceed without them.
 
 ### Step 2: Get current portfolio state
 
@@ -51,6 +56,17 @@ For each trade that was executed in this cycle, assess:
 - **Improvement opportunities:** What could be done better? More conservative sizing? Different market selection? Better analysis approach?
 
 For each trade, write a brief `assessment` (1-2 sentences) and an `improvement_suggestion` (1 specific actionable suggestion).
+
+### Step 4b: Analyze position outcomes
+
+If `outcome_analysis.json` exists, review the closed position outcomes:
+
+- **Calibration accuracy:** When we estimated 60%, did it happen ~60% of the time? Note any systematic over/under-confidence.
+- **P&L by category:** Which market types were profitable vs unprofitable based on actual closed trades?
+- **Brier score trends:** Are predictions improving cycle-over-cycle? (Compare to previous cycle reports if available.)
+- **Sell timing:** If sells were executed this cycle, were they timely? Did we sell too early/late?
+
+Include a `position_outcomes` section in the JSON output with key findings.
 
 ### Step 5: Extract learnings
 
@@ -115,6 +131,13 @@ Write to `state/cycles/{cycle_id}/reviewer_output.json`:
     "num_positions": "<int>",
     "unrealized_pnl": "<float>"
   },
+  "position_outcomes": {
+    "sells_this_cycle": "<int, from sell_results.json>",
+    "total_closed": "<int, from outcome_analysis.json>",
+    "realized_pnl": "<float, total realized P&L from closed positions>",
+    "avg_brier_score": "<float, average prediction accuracy>",
+    "calibration_notes": "<string, key calibration findings>"
+  },
   "learnings": ["<learning 1>", "<learning 2>", "..."],
   "strategy_suggestions": ["<suggestion 1>", "<suggestion 2>", "..."]
 }
@@ -164,6 +187,18 @@ Write to `state/reports/cycle-{cycle_id}.md` with these sections:
 - **Total Exposure:** ${total_exposure}
 - **Open Positions:** {count}
 - **Unrealized P&L:** ${unrealized_pnl}
+
+## Position Outcomes
+
+{Include this section only if outcome_analysis.json exists}
+
+| Closed Position | Entry | Exit | Est. Prob | Actual | Brier | P&L |
+|----------------|-------|------|-----------|--------|-------|-----|
+| {question} | {entry_price} | {exit_price} | {est_prob} | {actual} | {brier} | ${pnl} |
+
+**Calibration:** {summary of calibration accuracy}
+**Total Realized P&L:** ${total_realized_pnl}
+**Average Brier Score:** {avg_brier}
 
 ## Learnings
 

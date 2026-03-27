@@ -96,12 +96,27 @@ class DataStore:
         """)
         self.conn.commit()
 
+        # Schema migration: add 'action' column to trades table
+        try:
+            self.conn.execute("ALTER TABLE trades ADD COLUMN action TEXT DEFAULT 'BUY'")
+            self.conn.commit()
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+
+        # Schema migration: add 'fee_amount' column to trades table
+        try:
+            self.conn.execute("ALTER TABLE trades ADD COLUMN fee_amount REAL DEFAULT 0")
+            self.conn.commit()
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+
     def record_trade(self, market_id: str, question: str, side: str,
                      price: float, size: float, token_id: str = "",
                      condition_id: str = "", order_id: str = "",
                      is_paper: bool = True, estimated_prob: float = 0,
                      edge: float = 0, reasoning: str = "",
-                     neg_risk: bool = False, fill_price: float = 0) -> int:
+                     neg_risk: bool = False, fill_price: float = 0,
+                     action: str = "BUY", fee_amount: float = 0) -> int:
         """Record a trade execution. Returns the trade ID."""
         now = datetime.now(timezone.utc).isoformat()
         cost = price * size
@@ -109,14 +124,16 @@ class DataStore:
             """INSERT INTO trades
                (timestamp, market_id, condition_id, token_id, question,
                 side, price, size, cost_usdc, order_id, status, is_paper,
-                estimated_prob, edge, reasoning, neg_risk, fill_price)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'filled', ?, ?, ?, ?, ?, ?)""",
+                estimated_prob, edge, reasoning, neg_risk, fill_price, action,
+                fee_amount)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'filled', ?, ?, ?, ?, ?, ?, ?, ?)""",
             (now, market_id, condition_id, token_id, question,
              side, price, size, cost, order_id, int(is_paper),
-             estimated_prob, edge, reasoning, int(neg_risk), fill_price)
+             estimated_prob, edge, reasoning, int(neg_risk), fill_price, action,
+             fee_amount)
         )
         self.conn.commit()
-        log.info(f"Recorded trade: {side} {size}@{price} on {question[:50]}")
+        log.info(f"Recorded trade: {action} {side} {size}@{price} on {question[:50]}")
         return cur.lastrowid
 
     def upsert_position(self, market_id: str, question: str, side: str,
@@ -288,6 +305,76 @@ class DataStore:
         )
         self.conn.commit()
         log.info(f"Closed position on {pos['question'][:50]}: PnL={realized:.2f}")
+
+    def reduce_position(self, market_id: str, sell_size: float,
+                        sell_price: float) -> float:
+        """Reduce (or fully close) a position. Returns realized PnL.
+
+        For full sells (sell_size >= held size), closes the position.
+        For partial sells, reduces size and cost_basis proportionally.
+
+        Raises:
+            ValueError: If no open position exists for market_id or sell_size > held.
+        """
+        pos = self.conn.execute(
+            "SELECT * FROM positions WHERE market_id = ? AND status = 'open'",
+            (market_id,)
+        ).fetchone()
+        if not pos:
+            raise ValueError(f"No open position for market {market_id}")
+
+        if sell_size > pos["size"] + 0.001:  # small tolerance for float rounding
+            raise ValueError(
+                f"Sell size {sell_size} exceeds held size {pos['size']}"
+            )
+
+        now = datetime.now(timezone.utc).isoformat()
+        realized_pnl = (sell_price - pos["avg_price"]) * sell_size
+
+        if sell_size >= pos["size"] - 0.001:
+            # Full close
+            self.conn.execute(
+                """UPDATE positions SET status = 'closed', closed_at = ?,
+                   realized_pnl = ?, current_price = ?, size = 0,
+                   cost_basis = 0 WHERE id = ?""",
+                (now, realized_pnl, sell_price, pos["id"])
+            )
+            log.info(
+                f"Closed position on {pos['question'][:50]}: "
+                f"PnL=${realized_pnl:.2f}"
+            )
+        else:
+            # Partial close — reduce size and cost_basis proportionally
+            new_size = pos["size"] - sell_size
+            new_cost = pos["avg_price"] * new_size  # avg_price unchanged
+            self.conn.execute(
+                """UPDATE positions SET size = ?, cost_basis = ?
+                   WHERE id = ?""",
+                (new_size, new_cost, pos["id"])
+            )
+            log.info(
+                f"Reduced position on {pos['question'][:50]} by {sell_size}: "
+                f"PnL=${realized_pnl:.2f}, remaining={new_size:.2f}"
+            )
+
+        self.conn.commit()
+        return realized_pnl
+
+    def get_all_closed_positions(self) -> list[dict]:
+        """Return all closed positions as list of dicts."""
+        rows = self.conn.execute(
+            "SELECT * FROM positions WHERE status = 'closed' ORDER BY closed_at DESC"
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_closed_positions_since(self, since_iso: str) -> list[dict]:
+        """Return closed positions since a given ISO timestamp."""
+        rows = self.conn.execute(
+            "SELECT * FROM positions WHERE status = 'closed' AND closed_at >= ? "
+            "ORDER BY closed_at DESC",
+            (since_iso,)
+        ).fetchall()
+        return [dict(r) for r in rows]
 
     def close(self):
         """Close the database connection."""

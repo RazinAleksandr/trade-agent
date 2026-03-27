@@ -9,6 +9,7 @@ Cherry-picked and adapted from v1 portfolio.py:
 """
 
 from lib.db import DataStore
+from lib.fees import calculate_fee_per_share
 from lib.logging_setup import get_logger
 from lib.market_data import fetch_market_by_id
 
@@ -48,7 +49,9 @@ def get_portfolio_summary(
         else:
             current_price = market.no_price
 
-        unrealized_pnl = (current_price - pos["avg_price"]) * pos["size"]
+        # Estimate exit fee for conservative unrealized P&L
+        exit_fee = calculate_fee_per_share(current_price, market.category)
+        unrealized_pnl = (current_price - exit_fee - pos["avg_price"]) * pos["size"]
 
         # Update position dict for return value
         pos["current_price"] = current_price
