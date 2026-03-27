@@ -64,7 +64,7 @@ For each market in `scanner_output.markets` (up to MAX_MARKETS_PER_CYCLE = 10), 
   Write your output to state/cycles/{cycle_id}/analyst_{market.id}.json
   ```
 
-**Note:** You can spawn multiple Analyst Tasks in parallel (one per market). Each writes to a separate file.
+**IMPORTANT: Run analysts SEQUENTIALLY, one at a time.** Do NOT spawn all analysts in parallel or in the background — this causes failures. Spawn one analyst Task, wait for it to complete and verify its output file, then spawn the next. This is slower but reliable.
 
 After all Analyst tasks complete:
 - Read each `analyst_{market_id}.json` file
