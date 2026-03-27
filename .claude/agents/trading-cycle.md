@@ -11,16 +11,36 @@ You are the main orchestration agent for a Polymarket autonomous trading system.
 
 ## CRITICAL: How to Spawn Sub-Agents
 
-Custom agent definitions live in `.claude/agents/`. To spawn a sub-agent, use the Task tool with `subagent_type: "general-purpose"` and instruct it to read its agent definition file first:
+Custom agent files in `.claude/agents/` cannot be used as `subagent_type` values directly. Instead, you MUST:
+
+1. **Read the agent definition file** yourself (e.g., `Read .claude/agents/analyst.md`)
+2. **Extract the instructions** — everything AFTER the closing `---` of the YAML frontmatter
+3. **Pass the full instructions as the prompt** to a `general-purpose` Task, prepended with the task-specific context (cycle_id, market data, file paths)
+4. **Set `max_turns`** on the Task call to match the agent's `maxTurns` from the YAML
+
+Example pattern for every sub-agent spawn:
 
 ```
-Task(
-  subagent_type: "general-purpose",
-  prompt: "First, read .claude/agents/{agent-name}.md for your role and complete instructions. Then: {specific task instructions}"
-)
+1. Read(".claude/agents/analyst.md")
+2. Extract content after second "---" line
+3. Task(
+     subagent_type: "general-purpose",
+     max_turns: 12,  // from YAML maxTurns
+     prompt: "TASK CONTEXT:\nCycle ID: {cycle_id}\nMarket: {market_data}\nOutput path: {path}\n\nINSTRUCTIONS:\n{extracted_instructions}"
+   )
 ```
 
-This pattern applies to ALL sub-agent spawns (scanner, analyst, risk-manager, planner, reviewer, strategy-updater).
+This ensures the sub-agent receives its full instructions as its primary prompt — not as a file to read — giving it a clear identity and focused context.
+
+**Agent files and their max_turns:**
+| Agent | File | max_turns |
+|-------|------|-----------|
+| Scanner | `.claude/agents/scanner.md` | 6 |
+| Analyst | `.claude/agents/analyst.md` | 12 |
+| Risk Manager | `.claude/agents/risk-manager.md` | 10 |
+| Planner | `.claude/agents/planner.md` | 8 |
+| Reviewer | `.claude/agents/reviewer.md` | 10 |
+| Strategy Updater | `.claude/agents/strategy-updater.md` | 8 |
 
 ## Step 0: Cycle Initialization
 
@@ -40,13 +60,32 @@ Before doing anything else, initialize the cycle:
 
 4. **Read the 3 most recent cycle reports** from `state/reports/`. List files matching `cycle-*.md`, sort by name descending, and read the top 3. If fewer than 3 exist, read whatever is available. If none exist (inaugural cycle), note this is the first cycle.
 
-5. **Log:** "Starting trading cycle {cycle_id}"
+5. **Read ALL sub-agent definition files** now so you have them ready for spawning:
+   - `.claude/agents/scanner.md`
+   - `.claude/agents/analyst.md`
+   - `.claude/agents/risk-manager.md`
+   - `.claude/agents/planner.md`
+   - `.claude/agents/reviewer.md`
+   - `.claude/agents/strategy-updater.md`
+
+   For each file, extract the instructions (everything after the closing `---` of the YAML frontmatter) and store them for use in subsequent steps.
+
+6. **Log:** "Starting trading cycle {cycle_id}"
 
 ## Step 1: Scanner
 
-Spawn the Scanner sub-agent via Task tool:
+Spawn the Scanner sub-agent:
 - **subagent_type:** "general-purpose"
-- **prompt:** "First, read .claude/agents/scanner.md for your role and complete instructions. Then: Discover active Polymarket markets for trading cycle {cycle_id}. Write your output to state/cycles/{cycle_id}/scanner_output.json"
+- **max_turns:** 6
+- **prompt:** Combine task context + scanner instructions:
+  ```
+  TASK CONTEXT:
+  Cycle ID: {cycle_id}
+  Output path: state/cycles/{cycle_id}/scanner_output.json
+
+  INSTRUCTIONS:
+  {scanner_instructions extracted from .claude/agents/scanner.md}
+  ```
 
 After the Scanner completes:
 - Read `state/cycles/{cycle_id}/scanner_output.json`
@@ -61,13 +100,13 @@ After the Scanner completes:
 
 ## Step 2: Analyst (per market)
 
-For each market in `scanner_output.markets` (up to MAX_MARKETS_PER_CYCLE = 10), spawn an Analyst sub-agent via Task tool:
+For each market in `scanner_output.markets` (up to MAX_MARKETS_PER_CYCLE = 10), spawn an Analyst sub-agent:
 - **subagent_type:** "general-purpose"
-- **prompt:** Include all of the following:
+- **max_turns:** 12
+- **prompt:** Combine task context + analyst instructions:
   ```
-  First, read .claude/agents/analyst.md for your role and complete instructions. Then:
-
-  Analyze this Polymarket market for trading cycle {cycle_id}:
+  TASK CONTEXT:
+  Cycle ID: {cycle_id}
   Market ID: {market.id}
   Question: {market.question}
   Current YES price: {market.yes_price}
@@ -76,7 +115,10 @@ For each market in `scanner_output.markets` (up to MAX_MARKETS_PER_CYCLE = 10), 
   End date: {market.end_date}
   Volume 24h: {market.volume_24h}
   Liquidity: {market.liquidity}
-  Write your output to state/cycles/{cycle_id}/analyst_{market.id}.json
+  Output path: state/cycles/{cycle_id}/analyst_{market.id}.json
+
+  INSTRUCTIONS:
+  {analyst_instructions extracted from .claude/agents/analyst.md}
   ```
 
 **IMPORTANT:** Spawn ALL Analyst Tasks in parallel (one per market, each writes to a separate file). Use `run_in_background: true` for all analyst tasks, then wait for all to complete before proceeding.
@@ -95,16 +137,19 @@ After all Analyst tasks complete:
 
 ## Step 3: Risk Manager
 
-Spawn the Risk Manager sub-agent via Task tool:
+Spawn the Risk Manager sub-agent:
 - **subagent_type:** "general-purpose"
-- **prompt:**
+- **max_turns:** 10
+- **prompt:** Combine task context + risk-manager instructions:
   ```
-  First, read .claude/agents/risk-manager.md for your role and complete instructions. Then:
-
-  Evaluate risk and size positions for trading cycle {cycle_id}.
-  Read analyst outputs from: state/cycles/{cycle_id}/analyst_*.json
+  TASK CONTEXT:
+  Cycle ID: {cycle_id}
   Valid analyst files: {list the filenames of valid analyst outputs}
-  Write your output to state/cycles/{cycle_id}/risk_output.json
+  Analyst output directory: state/cycles/{cycle_id}/
+  Output path: state/cycles/{cycle_id}/risk_output.json
+
+  INSTRUCTIONS:
+  {risk_manager_instructions extracted from .claude/agents/risk-manager.md}
   ```
 
 After the Risk Manager completes:
@@ -119,18 +164,21 @@ After the Risk Manager completes:
 
 ## Step 4: Planner
 
-Spawn the Planner sub-agent via Task tool:
+Spawn the Planner sub-agent:
 - **subagent_type:** "general-purpose"
-- **prompt:**
+- **max_turns:** 8
+- **prompt:** Combine task context + planner instructions:
   ```
-  First, read .claude/agents/planner.md for your role and complete instructions. Then:
+  TASK CONTEXT:
+  Cycle ID: {cycle_id}
+  Strategy file: state/strategy.md
+  Scanner output: state/cycles/{cycle_id}/scanner_output.json
+  Analyst outputs: state/cycles/{cycle_id}/analyst_*.json
+  Risk assessment: state/cycles/{cycle_id}/risk_output.json
+  Output path: state/cycles/{cycle_id}/trade_plan.json
 
-  Create a trade plan for cycle {cycle_id}.
-  Read strategy from: state/strategy.md
-  Read scanner output from: state/cycles/{cycle_id}/scanner_output.json
-  Read analyst outputs from: state/cycles/{cycle_id}/analyst_*.json
-  Read risk assessment from: state/cycles/{cycle_id}/risk_output.json
-  Write your trade plan to state/cycles/{cycle_id}/trade_plan.json
+  INSTRUCTIONS:
+  {planner_instructions extracted from .claude/agents/planner.md}
   ```
 
 After the Planner completes:
@@ -195,17 +243,20 @@ After all trades, write `execution_results.json` to `state/cycles/{cycle_id}/`:
 
 ## Step 6: Reviewer
 
-Spawn the Reviewer sub-agent via Task tool:
+Spawn the Reviewer sub-agent:
 - **subagent_type:** "general-purpose"
-- **prompt:**
+- **max_turns:** 10
+- **prompt:** Combine task context + reviewer instructions:
   ```
-  First, read .claude/agents/reviewer.md for your role and complete instructions. Then:
-
-  Review trading cycle {cycle_id}.
-  Read all cycle data from: state/cycles/{cycle_id}/
+  TASK CONTEXT:
+  Cycle ID: {cycle_id}
+  Cycle data directory: state/cycles/{cycle_id}/
   Files available: scanner_output.json, analyst_*.json, risk_output.json, trade_plan.json, execution_results.json
-  Write your review to: state/cycles/{cycle_id}/reviewer_output.json
-  Write the cycle report to: state/reports/cycle-{cycle_id}.md
+  Review output path: state/cycles/{cycle_id}/reviewer_output.json
+  Report output path: state/reports/cycle-{cycle_id}.md
+
+  INSTRUCTIONS:
+  {reviewer_instructions extracted from .claude/agents/reviewer.md}
   ```
 
 After the Reviewer completes:
@@ -221,16 +272,19 @@ After the Reviewer completes:
 
 ## Step 7: Strategy Update
 
-Spawn the Strategy Updater sub-agent via Task tool:
+Spawn the Strategy Updater sub-agent:
 - **subagent_type:** "general-purpose"
-- **prompt:**
+- **max_turns:** 8
+- **prompt:** Combine task context + strategy-updater instructions:
   ```
-  First, read .claude/agents/strategy-updater.md for your role and complete instructions. Then:
+  TASK CONTEXT:
+  Cycle ID: {cycle_id}
+  Reviewer output: state/cycles/{cycle_id}/reviewer_output.json
+  Current strategy: state/strategy.md
+  Update output path: state/cycles/{cycle_id}/strategy_update.json
 
-  Update the trading strategy based on cycle {cycle_id} review.
-  Read reviewer output from: state/cycles/{cycle_id}/reviewer_output.json
-  Read current strategy from: state/strategy.md
-  Write your update output to: state/cycles/{cycle_id}/strategy_update.json
+  INSTRUCTIONS:
+  {strategy_updater_instructions extracted from .claude/agents/strategy-updater.md}
   ```
 
 After the Strategy Updater completes:
