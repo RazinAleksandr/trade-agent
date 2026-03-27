@@ -37,6 +37,8 @@ taches-cc-resources/
 .claude/*
 # But allow agent definition files (sub-agent prompts are code)
 !.claude/agents/
+!.claude/CLAUDE.md
+!.claude/TOOLKIT-GUIDE.md
 
 # Agent cycle intermediate data (ephemeral)
 state/cycles/*/

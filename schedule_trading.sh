@@ -27,7 +27,7 @@ usage() {
     echo "  $0 status"
     echo ""
     echo "Frequency: 1h, 2h, 4h, 6h, 8h, 12h"
-    echo "Duration:  1d, 2d, 3d, 5d, 7d, 14d"
+    echo "Duration:  hours (e.g. 12h) or days (e.g. 7d)"
     echo ""
     echo "Examples:"
     echo "  $0 start --every 4h --for 7d"
@@ -48,16 +48,12 @@ parse_hours() {
     esac
 }
 
-parse_days() {
+parse_duration_seconds() {
     local val="$1"
     case "$val" in
-        1d)  echo 1 ;;
-        2d)  echo 2 ;;
-        3d)  echo 3 ;;
-        5d)  echo 5 ;;
-        7d)  echo 7 ;;
-        14d) echo 14 ;;
-        *)   echo "Error: Unsupported duration '$val'. Use: 1d, 2d, 3d, 5d, 7d, 14d" >&2; exit 1 ;;
+        [0-9]*h) echo $(( ${val%h} * 3600 )) ;;
+        [0-9]*d) echo $(( ${val%d} * 86400 )) ;;
+        *)       echo "Error: Unsupported duration '$val'. Use hours (e.g. 12h) or days (e.g. 7d)" >&2; exit 1 ;;
     esac
 }
 
@@ -79,21 +75,24 @@ do_start() {
 
     local hours
     hours=$(parse_hours "$freq")
-    local days
-    days=$(parse_days "$dur")
+    local dur_secs
+    dur_secs=$(parse_duration_seconds "$dur")
 
     # Calculate stop date
-    local stop_date
+    local stop_epoch stop_date
+    stop_epoch=$(( $(date +%s) + dur_secs ))
     if [[ "$(uname)" == "Darwin" ]]; then
-        stop_date=$(date -v+"${days}d" +%Y-%m-%dT%H:%M:%S)
-        stop_epoch=$(date -v+"${days}d" +%s)
+        stop_date=$(date -r "$stop_epoch" +%Y-%m-%dT%H:%M:%S)
     else
-        stop_date=$(date -d "+${days} days" +%Y-%m-%dT%H:%M:%S)
-        stop_epoch=$(date -d "+${days} days" +%s)
+        stop_date=$(date -d "@$stop_epoch" +%Y-%m-%dT%H:%M:%S)
     fi
 
-    # Save stop time
+    # Save stop time and create session log file
     echo "$stop_epoch" > "$STOP_FILE"
+    local session_log="$SCRIPT_DIR/logs/session-$(date +%Y%m%d-%H%M%S).log"
+    mkdir -p "$SCRIPT_DIR/logs"
+    echo "$session_log" > "$SCRIPT_DIR/.trading-logfile"
+    echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) SESSION: every $freq for $dur (until $stop_date)" > "$session_log"
 
     # Remove any existing polymarket cron entry
     crontab -l 2>/dev/null | grep -v "$CRON_MARKER" | crontab - 2>/dev/null || true
@@ -106,26 +105,31 @@ do_start() {
         cron_schedule="0 */${hours} * * *"
     fi
 
-    # The cron command: check stop time, then run cycle
-    local cron_cmd="$cron_schedule if [ -f $STOP_FILE ] && [ \$(date +\%s) -gt \$(cat $STOP_FILE) ]; then crontab -l 2>/dev/null | grep -v '$CRON_MARKER' | crontab - 2>/dev/null; rm -f $STOP_FILE; else $SCRIPT_DIR/run_cycle.sh; fi $CRON_MARKER"
+    # Simple cron line — auto-stop logic is in run_cycle.sh
+    local cron_line="$cron_schedule $SCRIPT_DIR/run_cycle.sh $CRON_MARKER"
 
     # Install cron job
-    (crontab -l 2>/dev/null | grep -v "$CRON_MARKER"; echo "$cron_cmd") | crontab -
+    (crontab -l 2>/dev/null | grep -v "$CRON_MARKER" || true; echo "$cron_line") | crontab -
 
     echo "Trading scheduled:"
     echo "  Frequency: every $freq"
     echo "  Duration:  $dur (until $stop_date)"
     echo "  Stop file: $STOP_FILE"
     echo ""
-    echo "The agent will run every ${hours}h and auto-stop after ${days} days."
+    echo "The agent will run every ${hours}h and auto-stop after $dur."
     echo "Watch sessions: tmux ls"
     echo "Check logs:     ls -la $SCRIPT_DIR/logs/"
     echo "Stop early:     $0 stop"
+    echo ""
+
+    # Run first cycle immediately
+    echo "Starting first cycle now..."
+    "$SCRIPT_DIR/run_cycle.sh" &
 }
 
 do_stop() {
     crontab -l 2>/dev/null | grep -v "$CRON_MARKER" | crontab - 2>/dev/null || true
-    rm -f "$STOP_FILE"
+    rm -f "$STOP_FILE" "$SCRIPT_DIR/.trading-logfile"
     echo "Trading schedule removed."
     echo ""
     echo "Note: any currently running cycle will finish. Check with: tmux ls"
