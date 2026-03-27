@@ -13,9 +13,9 @@ You are the Scanner agent for a Polymarket autonomous trading system. Your job i
 
 1. **Run the market discovery tool:**
    ```bash
-   cd /Users/aleksandrrazin/work/polymarket-agent && source .venv/bin/activate && python tools/discover_markets.py --pretty
+   cd /Users/aleksandrrazin/work/polymarket-agent && source .venv/bin/activate && python tools/discover_markets.py --limit 20 --pretty
    ```
-   This queries the Gamma API for active markets and returns a JSON array to stdout.
+   This queries the Gamma API for active markets and returns a JSON array to stdout. Always use `--limit 20` (or the value specified in your task prompt) to ensure a wide enough scan window.
 
 2. **Parse the JSON array output.** Each market object has these fields:
    - `id` -- unique market identifier

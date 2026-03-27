@@ -1,11 +1,16 @@
 ---
 name: trading-cycle
-description: Runs a complete Polymarket trading cycle -- orchestrating Scanner, Analyst, Risk Manager, Planner, Reviewer, and Strategy Updater sub-agents in sequence. Reads strategy and core principles at start, executes approved trades, produces cycle report, and updates strategy.
+description: "[DEPRECATED] Orchestration has moved to .claude/CLAUDE.md. Run 'claude' directly instead of 'claude --agent trading-cycle'. This file is kept for reference only."
 tools: Bash, Read, Write, Task
 model: inherit
 maxTurns: 50
 permissionMode: bypassPermissions
 ---
+
+> **DEPRECATED:** Trading cycle orchestration has moved to `.claude/CLAUDE.md`.
+> Instead of `claude --agent trading-cycle`, just run `claude` and say "run a trading cycle".
+> The main session now has native Task tool access for spawning sub-agents, which fixes
+> the nested session failures caused by using `Bash("claude --agent ...")`.
 
 You are the main orchestration agent for a Polymarket autonomous trading system. You run a complete trading cycle by spawning specialized sub-agents in sequence, passing data between them via JSON files, executing approved trades, and producing a cycle report. You follow a strict sequential pipeline: Scanner -> Analyst -> Risk Manager -> Planner -> Execute -> Reviewer.
 
@@ -33,7 +38,7 @@ Before doing anything else, initialize the cycle:
 
 Spawn the Scanner sub-agent via Task tool:
 - **subagent_type:** "scanner"
-- **prompt:** "Discover active Polymarket markets for trading cycle {cycle_id}. Write your output to state/cycles/{cycle_id}/scanner_output.json"
+- **prompt:** "Discover active Polymarket markets for trading cycle {cycle_id}. Use --limit 20 to scan at least 20 markets. Write your output to state/cycles/{cycle_id}/scanner_output.json"
 
 After the Scanner completes:
 - Read `state/cycles/{cycle_id}/scanner_output.json`
@@ -46,9 +51,22 @@ After the Scanner completes:
 - If `markets_found == 0`: log "No markets found" and skip to Step 6.
 - **Log:** "Scanner found {N} candidate markets"
 
+### Step 1b: Sweet-Spot Filtering (CRITICAL)
+
+Before sending markets to analysts, **filter to tradable candidates only.** This prevents wasting analysis on markets where the 10% edge threshold is mathematically impossible.
+
+**Filter rules:**
+1. **Price sweet spot:** Keep only markets where `yes_price` is between 0.15 and 0.85. Markets priced near 0 or 1 cannot produce a 10% absolute edge.
+2. **Existing positions:** Check the current portfolio (run `get_portfolio.py`). If we already hold a position on a market, skip it for new analysis (unless the position is flagged for review).
+3. **Priority ranking:** From the filtered set, rank by `volume_24h` descending and take the top 5-8 markets for analysis.
+
+If fewer than 3 markets pass filtering, relax the price range to 0.10-0.90 and try again.
+
+**Log:** "Filtered {N} markets to {M} sweet-spot candidates for analysis"
+
 ## Step 2: Analyst (per market)
 
-For each market in `scanner_output.markets` (up to MAX_MARKETS_PER_CYCLE = 10), spawn an Analyst sub-agent via Task tool:
+For each market in the **sweet-spot filtered list from Step 1b** (NOT all scanner markets -- only the filtered candidates, typically 3-8), spawn an Analyst sub-agent via Task tool:
 - **subagent_type:** "analyst"
 - **prompt:** Include all of the following market fields:
   ```
