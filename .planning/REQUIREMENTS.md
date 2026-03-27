@@ -48,11 +48,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Safety
 
-- [ ] **SAFE-01**: Paper trading is the default mode — live trading requires explicit .env configuration change
-- [ ] **SAFE-02**: Paper mode simulates realistic spreads (not perfect fills) to prevent false edge measurement
+- [x] **SAFE-01**: Paper trading is the default mode — live trading requires explicit .env configuration change
+- [x] **SAFE-02**: Paper mode simulates realistic spreads (not perfect fills) to prevent false edge measurement
 - [x] **SAFE-03**: Live trading gate — system requires positive paper P&L over configurable N cycles before allowing live mode
 - [x] **SAFE-04**: CLOB API credential refresh on 401 responses (L2 credentials expire)
-- [ ] **SAFE-05**: Order amount normalization (max 2 decimal places for sell orders, minimum 5 USDC notional)
+- [x] **SAFE-05**: Order amount normalization (max 2 decimal places for sell orders, minimum 5 USDC notional)
 
 ## v2 Requirements
 
@@ -121,11 +121,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | STRT-05 | Phase 3 | Complete |
 | STRT-06 | Phase 3 | Complete |
 | STRT-07 | Phase 4 | Complete |
-| SAFE-01 | Phase 1 | Pending |
-| SAFE-02 | Phase 1 | Pending |
+| SAFE-01 | Phase 1 | Complete |
+| SAFE-02 | Phase 1 | Complete |
 | SAFE-03 | Phase 4 | Complete |
 | SAFE-04 | Phase 4 | Complete |
-| SAFE-05 | Phase 1 | Pending |
+| SAFE-05 | Phase 1 | Complete |
 
 **Coverage:**
 - v1 requirements: 35 total
