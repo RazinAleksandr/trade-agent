@@ -9,6 +9,7 @@ import uuid
 
 from py_clob_client.client import ClobClient
 from py_clob_client.clob_types import OrderArgs, OrderType
+from py_clob_client.exceptions import PolyApiException
 from py_clob_client.order_builder.constants import BUY
 
 from lib.models import OrderResult
@@ -196,76 +197,98 @@ def execute_live_trade(
     if not valid:
         return OrderResult(order_id="", success=False, message=msg, is_paper=False)
 
-    try:
-        # Create authenticated ClobClient with signature_type=0 (EOA wallets)
-        client = ClobClient(
-            host,
-            key=private_key,
-            chain_id=chain_id,
-            signature_type=0,
-        )
-        creds = client.create_or_derive_api_creds()
-        client.set_api_creds(creds)
+    max_retries = 1
+    for attempt in range(max_retries + 1):
+        try:
+            # Create authenticated ClobClient with signature_type=0 (EOA wallets)
+            client = ClobClient(
+                host,
+                key=private_key,
+                chain_id=chain_id,
+                signature_type=0,
+            )
+            creds = client.create_or_derive_api_creds()
+            client.set_api_creds(creds)
 
-        # Create order -- always BUY the token we believe in
-        order_args = OrderArgs(
-            token_id=token_id,
-            price=price,
-            size=size,
-            side=BUY,
-        )
+            # Create order -- always BUY the token we believe in
+            order_args = OrderArgs(
+                token_id=token_id,
+                price=price,
+                size=size,
+                side=BUY,
+            )
 
-        # Sign and post as GTC limit order
-        signed = client.create_order(order_args)
-        result = client.post_order(signed, OrderType.GTC)
+            # Sign and post as GTC limit order
+            signed = client.create_order(order_args)
+            result = client.post_order(signed, OrderType.GTC)
 
-        order_id = result.get("orderID", result.get("id", "unknown"))
+            order_id = result.get("orderID", result.get("id", "unknown"))
 
-        # Record trade
-        store.record_trade(
-            market_id=market_id,
-            question=question,
-            side=side,
-            price=price,
-            size=size,
-            token_id=token_id,
-            condition_id=condition_id,
-            order_id=order_id,
-            is_paper=False,
-            estimated_prob=estimated_prob,
-            edge=edge,
-            reasoning=reasoning,
-            neg_risk=neg_risk,
-            fill_price=price,
-        )
+            # Record trade
+            store.record_trade(
+                market_id=market_id,
+                question=question,
+                side=side,
+                price=price,
+                size=size,
+                token_id=token_id,
+                condition_id=condition_id,
+                order_id=order_id,
+                is_paper=False,
+                estimated_prob=estimated_prob,
+                edge=edge,
+                reasoning=reasoning,
+                neg_risk=neg_risk,
+                fill_price=price,
+            )
 
-        # Update position
-        store.upsert_position(
-            market_id=market_id,
-            question=question,
-            side=side,
-            price=price,
-            size=size,
-            token_id=token_id,
-        )
+            # Update position
+            store.upsert_position(
+                market_id=market_id,
+                question=question,
+                side=side,
+                price=price,
+                size=size,
+                token_id=token_id,
+            )
 
-        log.info(
-            f"[LIVE] {side} {size:.2f} shares @ ${price:.3f} "
-            f"on '{question[:50]}' -- order: {order_id}"
-        )
+            log.info(
+                f"[LIVE] {side} {size:.2f} shares @ ${price:.3f} "
+                f"on '{question[:50]}' -- order: {order_id}"
+            )
 
-        return OrderResult(
-            order_id=order_id,
-            success=True,
-            message=str(result),
-            is_paper=False,
-        )
+            return OrderResult(
+                order_id=order_id,
+                success=True,
+                message=str(result),
+                is_paper=False,
+            )
 
-    except Exception as e:
-        log.error(f"Live trade failed: {e}")
-        return OrderResult(
-            order_id="",
-            success=False,
-            message=str(e),
-            is_paper=False,
-        )
+        except PolyApiException as e:
+            if e.status_code == 401 and attempt < max_retries:
+                log.warning(
+                    f"CLOB API returned 401, re-deriving credentials "
+                    f"(attempt {attempt + 1}/{max_retries})"
+                )
+                continue  # retry with fresh credentials
+            log.error(f"Live trade failed: {e}")
+            return OrderResult(
+                order_id="",
+                success=False,
+                message=str(e),
+                is_paper=False,
+            )
+        except Exception as e:
+            log.error(f"Live trade failed: {e}")
+            return OrderResult(
+                order_id="",
+                success=False,
+                message=str(e),
+                is_paper=False,
+            )
+
+    # Should not reach here, but safety return
+    return OrderResult(
+        order_id="", success=False,
+        message="Max retries exceeded", is_paper=False,
+    )
