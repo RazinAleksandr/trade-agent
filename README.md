@@ -47,7 +47,7 @@ Strategy Read -> Scanner -> Analyst -> Risk Manager -> Planner -> Execute -> Rev
 
 ```bash
 source .venv/bin/activate
-claude --agent-file .claude/agents/trading-cycle.md "Run a trading cycle"
+claude --agent .claude/agents/trading-cycle.md "Run a trading cycle"
 ```
 
 This will:

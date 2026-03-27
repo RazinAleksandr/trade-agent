@@ -45,7 +45,7 @@ cd "$SCRIPT_DIR"
 
 # Run trading cycle via Claude CLI
 echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) START: Trading cycle" >> "$LOGFILE"
-claude --agent-file .claude/agents/trading-cycle.md \
+claude --agent .claude/agents/trading-cycle.md \
     --print \
     --output-format text \
     --verbose \
