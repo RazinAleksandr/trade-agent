@@ -81,7 +81,7 @@ Plans:
 
 Plans:
 - [ ] 04-01-PLAN.md — Safety core: Config extensions, 401 credential refresh, gate-pass check, DataStore cycle stats
-- [ ] 04-02-PLAN.md — Scheduling: cron wrapper script with PID lockfile, crontab setup tool
+- [x] 04-02-PLAN.md — Scheduling: cron wrapper script with PID lockfile, crontab setup tool
 - [ ] 04-03-PLAN.md — Live trading gate tool and safety verification tests (SAFE-01 through SAFE-05)
 
 ## Progress

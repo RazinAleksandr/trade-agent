@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready to plan
-stopped_at: Phase 4 context gathered
-last_updated: "2026-03-26T19:48:09.570Z"
+status: Ready to execute
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-03-27T08:10:18.883Z"
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 15
+  completed_plans: 13
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-26)
 
 **Core value:** The agent must autonomously trade, analyze its own performance, and improve its strategy over time — no human intervention required between scheduled cycles.
-**Current focus:** Phase 03 — strategy-evolution
+**Current focus:** Phase 04 — scheduling-and-safety-hardening
 
 ## Current Position
 
-Phase: 4
-Plan: Not started
+Phase: 04 (scheduling-and-safety-hardening) — EXECUTING
+Plan: 3 of 3
 
 ## Performance Metrics
 
@@ -58,6 +58,8 @@ Plan: Not started
 | Phase 02 P04 | 3min | 2 tasks | 2 files |
 | Phase 03 P01 | 3min | 2 tasks | 6 files |
 | Phase 03 P02 | 2min | 1 tasks | 1 files |
+| Phase 04 P01 | 4min | 2 tasks | 6 files |
+| Phase 04 P02 | 5min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -99,6 +101,12 @@ Recent decisions affecting current work:
 - [Phase 03]: Strategy Updater failure is non-blocking -- cycle already complete after Reviewer step
 - [Phase 03]: core-principles.md is NEVER modified by any agent, read-only at cycle start
 - [Phase 03]: strategy.md modified ONLY by Strategy Updater sub-agent in Step 7
+- [Phase 04]: Gate-pass check is first validation in live mode, before private key check
+- [Phase 04]: PolyApiException caught before generic Exception to ensure 401 retry works
+- [Phase 04]: get_paper_cycle_stats counts cycle report files (not trade rows) per Pitfall 6
+- [Phase 04]: PID-file locking (not flock) for macOS compatibility
+- [Phase 04]: .cron-env PATH snapshot written at install time instead of dynamic NVM/tool detection
+- [Phase 04]: setup_schedule.py reads CYCLE_INTERVAL from os.environ via dotenv (no Config dependency)
 
 ### Pending Todos
 
@@ -112,6 +120,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T19:48:09.567Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-scheduling-and-safety-hardening/04-CONTEXT.md
+Last session: 2026-03-27T08:10:18.880Z
+Stopped at: Completed 04-02-PLAN.md
+Resume file: None
