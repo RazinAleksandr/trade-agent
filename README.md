@@ -14,6 +14,8 @@ Paper trading is the default. Live trading requires explicit setup and safety ga
 - Python 3.12+
 - [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) (`npm install -g @anthropic-ai/claude-code`)
 - An Anthropic API key (for Claude Code)
+- tmux (for autonomous scheduled operation)
+- cron (for scheduled cycles)
 - Internet access (Polymarket APIs, web search for analysis)
 
 ## Setup
@@ -46,36 +48,78 @@ Strategy Read -> Scanner -> Analyst -> Risk Manager -> Planner -> Execute -> Rev
 ### Run manually
 
 ```bash
+# Single cycle in a tmux session (runs unattended)
+./run_cycle.sh
+
+# Or interactively in your terminal
 source .venv/bin/activate
-claude --agent .claude/agents/trading-cycle.md "Run a trading cycle"
+claude --dangerously-skip-permissions
+# Then type: run a trading cycle
 ```
 
 This will:
 1. Read the current strategy (`state/strategy.md`) and core principles
-2. **Scanner** discovers active markets from Polymarket's Gamma API
-3. **Analyst** deep-dives each market (web search, Bull/Bear debate, probability estimate)
-4. **Risk Manager** sizes positions using Kelly criterion, checks exposure limits, detects correlated markets
-5. **Planner** creates a concrete trade plan based on strategy rules + all analysis
-6. **Execute** runs paper trades via the instrument layer tools
-7. **Reviewer** analyzes results, writes a cycle report to `state/reports/`
-8. **Strategy Updater** incrementally updates `state/strategy.md` based on learnings
+2. **Position Monitor** checks open positions for sells/holds
+3. **Scanner** discovers active markets from Polymarket's Gamma API
+4. **Analyst** deep-dives each market (web search, Bull/Bear debate, probability estimate)
+5. **Risk Manager** sizes positions using Kelly criterion, checks exposure limits, detects correlated markets
+6. **Planner** creates a concrete trade plan based on strategy rules + all analysis
+7. **Execute** runs paper trades via the instrument layer tools
+8. **Reviewer** analyzes results, writes a cycle report to `state/reports/`
+9. **Strategy Updater** incrementally updates `state/strategy.md` based on learnings
 
 Each cycle produces structured JSON files in `state/cycles/{cycle_id}/` and a human-readable report in `state/reports/`.
 
 ### Run on a schedule
 
 ```bash
-# Install a cron job (interval from CYCLE_INTERVAL in .env, default 4h)
-python tools/setup_schedule.py
+# Run every 1 hour for 12 hours (overnight sprint)
+./schedule_trading.sh start --every 1h --for 12h
+
+# Run every 4 hours for 7 days
+./schedule_trading.sh start --every 4h --for 7d
 
 # Check current schedule
-python tools/setup_schedule.py --show
+./schedule_trading.sh status
 
-# Remove schedule
-python tools/setup_schedule.py --remove
+# Stop early (current cycle finishes, no new ones start)
+./schedule_trading.sh stop
 ```
 
-The cron job uses `run_cycle.sh`, which handles PID-based locking (prevents overlapping cycles), virtualenv activation, and logging to `logs/`.
+Supported frequencies: `1h`, `2h`, `4h`, `6h`, `8h`, `12h`. Duration can be hours (`12h`) or days (`7d`).
+
+Each cycle runs in its own tmux session. To watch a running cycle:
+
+```bash
+tmux ls                          # List sessions
+tmux attach -t trading-HHMMSS    # Attach to a session (Ctrl+B, D to detach)
+```
+
+Under the hood, `schedule_trading.sh` installs a cron job that calls `run_cycle.sh`. The run script handles PID-based locking (prevents overlapping cycles), auto-stop after the duration expires, and logging to `logs/`.
+
+### Run on a remote server
+
+```bash
+# 1. Clone and set up as usual (see Setup above)
+
+# 2. Ensure Claude Code CLI is authenticated
+claude --version  # Verify it's installed
+# If not yet authenticated, run `claude` once interactively to log in
+
+# 3. (Optional) Create .cron-env if claude is not on the default PATH
+echo 'export PATH="/usr/local/bin:/home/user/.npm-global/bin:$PATH"' > .cron-env
+
+# 4. Start the schedule
+./schedule_trading.sh start --every 1h --for 24h
+
+# 5. Detach and leave it running
+# The cron job + tmux handles everything. SSH back anytime to check:
+./schedule_trading.sh status
+ls -la state/reports/            # Cycle reports
+ls -la logs/                     # Session logs
+```
+
+The `--dangerously-skip-permissions` flag is used automatically by `run_cycle.sh` so Claude can execute tools without interactive approval. This is required for unattended operation.
 
 ## CLI Tools
 
@@ -253,7 +297,8 @@ polymarket-agent/
     reports/              # Per-cycle markdown reports
   tests/                  # Pytest test suite
   setup_wallet.py         # One-time wallet setup for live trading
-  run_cycle.sh            # Cron wrapper with PID locking
+  schedule_trading.sh     # Start/stop/status for scheduled trading
+  run_cycle.sh            # Single cycle runner (tmux + PID locking)
   .env.example            # Configuration template
   requirements.txt        # Python dependencies
 ```
