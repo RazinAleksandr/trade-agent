@@ -1,6 +1,13 @@
 # Polymarket Autonomous Trading Agent
 
-An autonomous prediction market trading agent for [Polymarket](https://polymarket.com). Built as a two-layer system:
+> An AI agent that autonomously discovers, analyzes, and trades prediction markets on [Polymarket](https://polymarket.com) -- then learns from its own results to evolve its strategy over time.
+
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
+[![Claude Code](https://img.shields.io/badge/agent-Claude%20Code-orange.svg)](https://docs.anthropic.com/en/docs/claude-code)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Trading](https://img.shields.io/badge/mode-paper%20%2B%20live-yellow.svg)]()
+
+Built as a two-layer system:
 
 1. **Instrument Layer** (Python) -- Stateless CLI tools for market data, order execution, and portfolio tracking
 2. **Agent Layer** (Claude Code) -- Multi-agent system that discovers markets, estimates probabilities, sizes positions, executes trades, and evolves its own strategy over time
@@ -8,6 +15,16 @@ An autonomous prediction market trading agent for [Polymarket](https://polymarke
 The agent starts with zero knowledge. After each trading cycle, it reviews its decisions, extracts learnings, and updates its strategy document -- like a human analyst building a playbook from experience.
 
 Paper trading is the default. Live trading requires explicit setup and safety gates.
+
+### Key Features
+
+- **Multi-agent pipeline:** 8 specialized Claude agents (Scanner, Analyst, Risk Manager, Planner, Reviewer, Strategy Updater, Position Monitor, Outcome Analyzer)
+- **Self-evolving strategy:** starts blank, builds a trading playbook from its own experience
+- **Kelly criterion sizing:** quarter-Kelly with correlation detection and hard dollar caps
+- **Web research:** analysts search the web for evidence, run Bull vs Bear debates
+- **Brier score tracking:** measures prediction accuracy, not just P&L
+- **Scheduled operation:** cron + tmux for unattended overnight trading sprints
+- **Full audit trail:** every decision logged to SQLite + JSON + markdown reports
 
 ## Prerequisites
 
